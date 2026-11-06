@@ -237,7 +237,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
   const DOWS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
   // ───────── datos ─────────
-  const COLLS = ['config', 'services', 'staff', 'timeoff', 'bookings'];
+  const COLLS = ['config', 'services', 'staff', 'timeoff', 'bookings', 'clients'];
   const S = {}; COLLS.forEach((c) => (S[c] = {}));
   const DEF = { id: 'main', name: 'Nails Atelier', tagline: 'Un espacio donde la calidad, la técnica y la experiencia no se negocian.', hours: 'Lunes a sábado', address: 'Av. San Borja Sur 247, San Borja, Lima', phone: '915049042', tiktok: 'nailsatelier_pe', instagram: 'nailsatelier_pe', slotStep: 15, minNotice: 120, maxDays: 30, depositPct: 0, payMethods: 'Yape · Visa por pago link (+5%)', policy: 'Puedes reprogramar sin penalidad hasta un día antes de tu cita, como máximo a las 8:00 p. m. Después de ese plazo, la cancelación o reprogramación tiene una penalidad de S/ 20 que se descuenta del adelanto.',
     cutoffPrevDayMin: 1200,
@@ -264,10 +264,12 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
       from: (r) => ({ id: r.id, name: r.name, category: r.category || '', duration: r.duration, price: Number(r.price), bufferBefore: r.buffer_before, bufferAfter: r.buffer_after, color: r.color, description: r.description || '', active: r.active, order: r.sort, demo: r.demo }) },
     staff: { to: (p) => ({ id: p.id, name: p.name, services: p.services || [], schedule: p.schedule || {}, active: p.active !== false, demo: !!p.demo }), from: (r) => ({ id: r.id, name: r.name, services: r.services || [], schedule: r.schedule || {}, active: r.active, demo: r.demo }) },
     timeoff: { to: (o) => ({ id: o.id, staff_id: o.staffId, date: o.date, start_min: o.start, end_min: o.end, reason: o.reason || null }), from: (r) => ({ id: r.id, staffId: r.staff_id, date: r.date, start: r.start_min, end: r.end_min, reason: r.reason || '' }) },
-    bookings: { to: (b) => ({ id: b.id, code: b.code, service_id: b.serviceId, service_name: b.serviceName, staff_id: b.staffId, staff_name: b.staffName, date: b.date, start_min: b.start, end_min: b.end, block_start: b.blockStart, block_end: b.blockEnd, price: b.price, client_name: b.client.name, client_phone: b.client.phone, client_email: b.client.email || null, client_note: b.client.note || null, status: b.status, source: b.source, cancel_reason: b.cancelReason || null, history: b.history || [], demo: !!b.demo }),
-      from: (r) => ({ id: r.id, code: r.code, serviceId: r.service_id, serviceName: r.service_name, staffId: r.staff_id, staffName: r.staff_name, date: r.date, start: r.start_min, end: r.end_min, blockStart: r.block_start, blockEnd: r.block_end, price: Number(r.price), client: { name: r.client_name, phone: r.client_phone, email: r.client_email || '', note: r.client_note || '' }, status: r.status, source: r.source, cancelReason: r.cancel_reason || '', history: r.history || [], demo: r.demo, createdAt: r.created_at }) },
+    bookings: { to: (b) => ({ id: b.id, code: b.code, service_id: b.serviceId, service_name: b.serviceName, staff_id: b.staffId, staff_name: b.staffName, date: b.date, start_min: b.start, end_min: b.end, block_start: b.blockStart, block_end: b.blockEnd, price: b.price, client_name: b.client.name, client_phone: b.client.phone, client_email: b.client.email || null, client_note: b.client.note || null, client_dni: b.client.dni || null, status: b.status, source: b.source, cancel_reason: b.cancelReason || null, history: b.history || [], demo: !!b.demo }),
+      from: (r) => ({ id: r.id, code: r.code, serviceId: r.service_id, serviceName: r.service_name, staffId: r.staff_id, staffName: r.staff_name, date: r.date, start: r.start_min, end: r.end_min, blockStart: r.block_start, blockEnd: r.block_end, price: Number(r.price), client: { name: r.client_name, phone: r.client_phone, email: r.client_email || '', note: r.client_note || '', dni: r.client_dni || '' }, status: r.status, source: r.source, cancelReason: r.cancel_reason || '', history: r.history || [], demo: r.demo, createdAt: r.created_at }) },
   };
-  const TABLE = { config: 'settings', services: 'services', staff: 'staff', timeoff: 'timeoff', bookings: 'bookings' };
+  MAP.clients = { to: (c) => ({ dni: c.id, name: c.name, phone: c.phone || null, email: c.email || null, notes: c.notes || null }),
+    from: (r) => ({ id: r.dni, name: r.name, phone: r.phone || '', email: r.email || '', notes: r.notes || '', firstSeen: r.first_seen, lastSeen: r.last_seen }) };
+  const TABLE = { config: 'settings', services: 'services', staff: 'staff', timeoff: 'timeoff', bookings: 'bookings', clients: 'clients' };
   // Los mensajes de las funciones de la base (raise exception) llegan tal cual para mostrarlos a la clienta.
   const sbErr = (e) => new Error((e && (e.message || e.details)) || 'No se pudo conectar. Revisa tu internet e intenta de nuevo.');
   async function put(c, rec) {
@@ -278,7 +280,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
   }
   async function del(c, id) {
     delete S[c][id]; notify();
-    if (backend === 'supabase') { const { error } = await sb.from(TABLE[c]).delete().eq('id', id); if (error) { await loadAll().catch(() => {}); throw sbErr(error); } }
+    if (backend === 'supabase') { const { error } = await sb.from(TABLE[c]).delete().eq(c === 'clients' ? 'dni' : 'id', id); if (error) { await loadAll().catch(() => {}); throw sbErr(error); } }
     else saveLocal();
   }
   const vals = (o) => Object.values(o || {});
@@ -287,7 +289,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
     if (backend !== 'supabase') return;
     const get = async (c) => { const { data, error } = await sb.from(TABLE[c]).select('*'); if (error) throw sbErr(error); const m = {}; (data || []).forEach((r) => { const o = MAP[c].from(r); m[o.id] = o; }); S[c] = m; };
     await Promise.all(['config', 'services', 'staff'].map(get));
-    if (canEdit) await Promise.all(['timeoff', 'bookings'].map(get));
+    if (canEdit) await Promise.all(['timeoff', 'bookings', 'clients'].map(get));
     else {
       // Público: solo bloques ocupados, sin nombres ni celulares.
       const n = nowL(); const rows = await rpc('busy_blocks', { p_from: n.date, p_to: addDays(n.date, Number(cfg().maxDays) + 1) });
@@ -354,19 +356,21 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
   // "Cualquier profesional": se asigna a quien tenga menos citas ese día (reparto equitativo).
   const pickStaff = (ids, date) => ids.slice().sort((a, b) => vals(S.bookings).filter((x) => x.staffId === a && x.date === date && x.status !== 'cancelada').length - vals(S.bookings).filter((x) => x.staffId === b && x.date === date && x.status !== 'cancelada').length)[0];
 
+  const normDni = (s) => String(s || '').replace(/[^0-9A-Za-z]/g, '').toUpperCase();
   function checkClient(client) {
-    const name = String(client.name || '').trim(); const phone = normPhone(client.phone);
+    const name = String(client.name || '').trim(); const phone = normPhone(client.phone); const dni = normDni(client.dni);
     if (name.length < 2) throw new Error('Escribe tu nombre.');
     if (!/^9\d{8}$/.test(phone)) throw new Error('El celular debe tener 9 dígitos y empezar con 9.');
+    if (!/^(\d{8}|[A-Z0-9]{9,12})$/.test(dni)) throw new Error('Escribe tu DNI (8 dígitos) o carné de extranjería.');
     if (client.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(client.email)) throw new Error('El correo no es válido.');
-    return { name, phone, email: String(client.email || '').trim(), note: String(client.note || '').trim().slice(0, 300) };
+    return { name, phone, dni, email: String(client.email || '').trim(), note: String(client.note || '').trim().slice(0, 300) };
   }
   // En línea la reserva la valida y guarda la base (función book): elige profesional y bloquea cruces de forma atómica.
   async function createBooking(o) {
     const svc = S.services[o.svcId]; if (!svc) throw new Error('Elige un servicio.');
     if (backend !== 'supabase' || o.exceptId) return createBookingLocal(o);
     const cl = checkClient(o.client);
-    const r = await rpc('book', { p_service: svc.id, p_staff: o.anyStaff ? null : o.staffId, p_date: o.date, p_start: o.start, p_name: cl.name, p_phone: cl.phone, p_email: cl.email || null, p_note: cl.note || null });
+    const r = await rpc('book', { p_service: svc.id, p_staff: o.anyStaff ? null : o.staffId, p_date: o.date, p_start: o.start, p_name: cl.name, p_phone: cl.phone, p_email: cl.email || null, p_note: cl.note || null, p_dni: cl.dni });
     const b = { id: r.id, code: r.code, serviceId: svc.id, serviceName: r.serviceName, staffId: r.staffId, staffName: r.staffName, date: r.date, start: r.start, end: r.end, price: Number(r.price), client: cl, status: 'confirmada' };
     UI.lastB = b; loadAll().catch(() => {});
     return b;
@@ -380,7 +384,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
   }
   async function createBookingLocal({ svcId, staffId, anyStaff, date, start, client, source, exceptId }) {
     const svc = S.services[svcId]; if (!svc) throw new Error('Elige un servicio.');
-    const { name, phone } = checkClient(client);
+    const { name, phone, dni } = checkClient(client);
     const lockKey = (anyStaff ? 'any' : staffId) + '_' + date;
     return withLock(lockKey, async () => {
       let sid = staffId;
@@ -389,10 +393,10 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
       const at = new Date().toISOString();
       const b = { id: uid('b'), code: code(), serviceId: svc.id, serviceName: svc.name, staffId: sid, staffName: (S.staff[sid] || {}).name || '', date, start, end: start + Number(svc.duration),
         blockStart: start - (Number(svc.bufferBefore) || 0), blockEnd: start + Number(svc.duration) + (Number(svc.bufferAfter) || 0), price: Number(svc.price) || 0,
-        client: { name, phone, email: String(client.email || '').trim(), note: String(client.note || '').trim().slice(0, 300) }, status: 'confirmada', source: source || 'publico', createdAt: at,
+        client: { name, phone, dni, email: String(client.email || '').trim(), note: String(client.note || '').trim().slice(0, 300) }, status: 'confirmada', source: source || 'publico', createdAt: at,
         history: [{ at, what: exceptId ? 'Reprogramada' : 'Reservada', by: source === 'panel' ? 'Salón' : 'Clienta' }] };
       if (exceptId) { const old = S.bookings[exceptId]; await put('bookings', Object.assign({}, old, { status: 'cancelada', cancelReason: 'Reprogramada a ' + date + ' ' + hm(start), history: (old.history || []).concat({ at, what: 'Reprogramada', by: source === 'panel' ? 'Salón' : 'Clienta' }) })); b.rescheduledFrom = old.code; b.code = old.code; }
-      UI.lastB = b; return put('bookings', b);
+      UI.lastB = b; if (backend !== 'supabase') { const old = S.clients[dni] || {}; await put('clients', Object.assign({}, old, { id: dni, name, phone, email: b.client.email || old.email || '', firstSeen: old.firstSeen || at, lastSeen: at })); } return put('bookings', b);
     });
   }
 
@@ -412,7 +416,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
   const opt = (v, l, s) => `<option value="${esc(v)}"${String(v) === String(s) ? ' selected' : ''}>${esc(l)}</option>`;
   const statusPill = (s) => ({ confirmada: '<span class="pill lac">Confirmada</span>', completada: '<span class="pill ok">Atendida</span>', cancelada: '<span class="pill bad">Cancelada</span>', ausente: '<span class="pill warn">No asistió</span>' }[s] || esc(s));
   const demo = (x) => (x && x.demo ? ' <span class="tag-demo">DEMO</span>' : '');
-  const ADMIN = [['citas', 'Citas'], ['agenda', 'Agenda'], ['servicios', 'Servicios'], ['equipo', 'Equipo y horarios'], ['ajustes', 'Ajustes']];
+  const ADMIN = [['citas', 'Citas'], ['agenda', 'Agenda'], ['clientas', 'Clientas'], ['servicios', 'Servicios'], ['equipo', 'Equipo y horarios'], ['ajustes', 'Ajustes']];
   const PUB = ['reservar', 'mi-cita', 'info', 'ingresar'];
   const routes = PUB.concat(ADMIN.map((x) => x[0]));
   function go(v) { if (!routes.includes(v)) v = canEdit ? 'citas' : 'reservar';
@@ -444,7 +448,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
   }
   function render() {
     const a = $('#app'); const v = UI.view;
-    const body = { reservar: viewBook, 'mi-cita': viewMine, info: viewInfo, ingresar: viewLogin, citas: viewCitas, agenda: viewAgenda, servicios: viewServices, equipo: viewStaff, ajustes: viewSettings }[v]();
+    const body = { reservar: viewBook, 'mi-cita': viewMine, info: viewInfo, ingresar: viewLogin, citas: viewCitas, agenda: viewAgenda, clientas: viewClients, servicios: viewServices, equipo: viewStaff, ajustes: viewSettings }[v]();
     const note = UI.loadError ? `<div class="banner warn">No se pudo cargar la agenda (${esc(UI.loadError)}). Revisa tu conexión y recarga la página.</div>`
       : backend === 'local' && !PUB.includes(v) ? '<div class="banner warn"><b>Modo de prueba:</b> falta conectar Supabase en <code>config.js</code>. Todo se guarda solo en este navegador y las clientas no ven estos datos.</div>' : '';
     const demoNote = canEdit && !PUB.includes(v) && [S.services, S.staff, S.bookings].some((m) => vals(m).some((x) => x.demo)) ? '<div class="banner warn"><span class="tag-demo">DEMO</span> Hay datos de ejemplo (marcados DEMO). <button class="btn sm" id="clear-demo">Borrar ejemplo</button></div>' : '';
@@ -517,10 +521,11 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
     } else {
       const who = B.staff === 'any' ? 'La primera profesional disponible' : (S.staff[B.staff] || {}).name;
       const F = B.form || {};
-      html = stepHead(4, 'Tus datos', 'Solo tu nombre y celular para confirmar.') +
+      html = stepHead(4, 'Tus datos', 'Nombre, DNI y celular para confirmar tu cita.') +
         `<div class="w-sum"><div><b>${esc(svc.name)}</b><span>${esc(fmtD(B.date))} · ${hm(B.start)} – ${hm(B.start + Number(svc.duration))}</span><span>${esc(who)}</span></div><b class="w-price">${money(svc.price)}</b></div>
         <form id="bk-form" class="w-form" novalidate>
           <label class="w-f" for="cl-n"><span>Nombre</span><input type="text" id="cl-n" autocomplete="name" autocapitalize="words" enterkeyhint="next" value="${esc(F.name || '')}" required></label>
+          <label class="w-f" for="cl-d"><span>DNI</span><input type="text" id="cl-d" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="8 dígitos (o carné de extranjería)" enterkeyhint="next" value="${esc(F.dni || '')}" required></label>
           <label class="w-f" for="cl-p"><span>Celular</span><input type="tel" id="cl-p" autocomplete="tel-national" inputmode="numeric" placeholder="9XX XXX XXX" enterkeyhint="done" value="${esc(F.phone || '')}" required></label>
           <details class="w-more"${F.note || F.email ? ' open' : ''}><summary>Agregar nota o correo (opcional)</summary>
             <label class="w-f" for="cl-x"><span>Nota (diseño, largo, alergias)</span><textarea id="cl-x" rows="2">${esc(F.note || '')}</textarea></label>
@@ -529,7 +534,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
           <p class="err" id="bk-err" role="alert"></p></form>`;
       bar = '<button class="w-cta" id="w-ok">Confirmar cita</button>';
       after = () => {
-        const keep = () => { B.form = { name: $('#cl-n').value, phone: $('#cl-p').value, note: $('#cl-x').value, email: $('#cl-e').value }; };
+        const keep = () => { B.form = { name: $('#cl-n').value, dni: $('#cl-d').value, phone: $('#cl-p').value, note: $('#cl-x').value, email: $('#cl-e').value }; };
         $('#bk-form').addEventListener('input', keep);
         const submit = () => { keep(); const btn = $('#w-ok'); $('#bk-err').textContent = '';
           guard(btn, async () => { const b = await createBooking({ svcId: svc.id, staffId: B.staff, anyStaff: B.staff === 'any', date: B.date, start: B.start, client: B.form, source: 'publico' }); UI.done = b.id; UI.doneB = b; B.form = {}; render(); window.scrollTo(0, 0); })
@@ -624,15 +629,15 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
   function viewCitas() {
     const n = nowL(); const all = vals(S.bookings).sort((a, b) => (a.date + hm(a.start)).localeCompare(b.date + hm(b.start)));
     const f = UI.filter; const q = (UI.q || '').toLowerCase();
-    const rows = all.filter((b) => (f === 'proximas' ? b.status === 'confirmada' && epoch(b.date, b.end) >= n.ts : f === 'hoy' ? b.date === n.date && b.status !== 'cancelada' : f === 'pasadas' ? b.status !== 'cancelada' && epoch(b.date, b.end) < n.ts : b.status === 'cancelada') && (!q || (b.client.name + ' ' + b.client.phone + ' ' + b.code).toLowerCase().includes(q)));
+    const rows = all.filter((b) => (f === 'proximas' ? b.status === 'confirmada' && epoch(b.date, b.end) >= n.ts : f === 'hoy' ? b.date === n.date && b.status !== 'cancelada' : f === 'pasadas' ? b.status !== 'cancelada' && epoch(b.date, b.end) < n.ts : b.status === 'cancelada') && (!q || (b.client.name + ' ' + b.client.phone + ' ' + (b.client.dni || '') + ' ' + b.code).toLowerCase().includes(q)));
     if (f === 'pasadas' || f === 'canceladas') rows.reverse();
     const today = all.filter((b) => b.date === n.date && b.status !== 'cancelada');
     const monthDone = all.filter((b) => b.date.slice(0, 7) === n.date.slice(0, 7) && b.status === 'completada');
     const k = (l, v) => `<div class="kpi"><span>${l}</span><b>${v}</b></div>`;
     return { html: `<div class="row"><h1 class="grow">Citas</h1><button class="btn primary" id="new-b">+ Nueva cita</button><button class="btn" id="share">Compartir enlace de reservas</button></div>
       <div class="kpis">${k('Citas hoy', today.length)}${k('Próximas', all.filter((b) => b.status === 'confirmada' && epoch(b.date, b.end) >= n.ts).length)}${k('Atendidas este mes', monthDone.length)}${k('Ingresos del mes (atendidas)', money(monthDone.reduce((a, b) => a + b.price, 0)))}</div>
-      <div class="row"><div class="seg" role="group" aria-label="Filtro">${[['proximas', 'Próximas'], ['hoy', 'Hoy'], ['pasadas', 'Pasadas'], ['canceladas', 'Canceladas']].map(([x, l]) => `<button data-f="${x}" aria-pressed="${f === x}">${l}</button>`).join('')}</div><input type="search" id="q" placeholder="Buscar clienta, celular o código" value="${esc(UI.q || '')}" style="max-width:280px"></div>
-      ${rows.length ? `<div class="tbl"><table><thead><tr><th>Fecha</th><th>Hora</th><th>Clienta</th><th>Servicio</th><th>Profesional</th><th>Estado</th><th class="n">Precio</th><th></th></tr></thead><tbody>${rows.map((b) => `<tr><td>${esc(fmtD(b.date, { weekday: 'short', month: 'short' }))}</td><td class="n">${hm(b.start)}–${hm(b.end)}</td><td><b>${esc(b.client.name)}</b>${demo(b)}<br><span class="small muted">${esc(b.client.phone)}${b.client.note ? ' · ' + esc(b.client.note) : ''}</span></td><td>${esc(b.serviceName)}</td><td>${esc(b.staffName)}</td><td>${statusPill(b.status)}</td><td class="n">${money(b.price)}</td><td><button class="btn sm" data-open="${b.id}">Abrir</button></td></tr>`).join('')}</tbody></table></div>` : `<div class="card" style="text-align:center"><p class="muted">No hay citas en este filtro.</p>${vals(S.services).length ? '' : '<button class="btn" id="seed2">Cargar ejemplo</button>'}</div>`}`,
+      <div class="row"><div class="seg" role="group" aria-label="Filtro">${[['proximas', 'Próximas'], ['hoy', 'Hoy'], ['pasadas', 'Pasadas'], ['canceladas', 'Canceladas']].map(([x, l]) => `<button data-f="${x}" aria-pressed="${f === x}">${l}</button>`).join('')}</div><input type="search" id="q" placeholder="Buscar clienta, DNI, celular o código" value="${esc(UI.q || '')}" style="max-width:280px"></div>
+      ${rows.length ? `<div class="tbl"><table><thead><tr><th>Fecha</th><th>Hora</th><th>Clienta</th><th>Servicio</th><th>Profesional</th><th>Estado</th><th class="n">Precio</th><th></th></tr></thead><tbody>${rows.map((b) => `<tr><td>${esc(fmtD(b.date, { weekday: 'short', month: 'short' }))}</td><td class="n">${hm(b.start)}–${hm(b.end)}</td><td><b>${esc(b.client.name)}</b>${demo(b)}<br><span class="small muted">${b.client.dni ? 'DNI ' + esc(b.client.dni) + ' · ' : ''}${esc(b.client.phone)}${b.client.note ? ' · ' + esc(b.client.note) : ''}</span></td><td>${esc(b.serviceName)}</td><td>${esc(b.staffName)}</td><td>${statusPill(b.status)}</td><td class="n">${money(b.price)}</td><td><button class="btn sm" data-open="${b.id}">Abrir</button></td></tr>`).join('')}</tbody></table></div>` : `<div class="card" style="text-align:center"><p class="muted">No hay citas en este filtro.</p>${vals(S.services).length ? '' : '<button class="btn" id="seed2">Cargar ejemplo</button>'}</div>`}`,
       after: (a) => {
         $$('[data-f]', a).forEach((b) => (b.onclick = () => { UI.filter = b.dataset.f; render(); }));
         const qi = $('#q'); let t; qi.oninput = () => { clearTimeout(t); t = setTimeout(() => { UI.q = qi.value; render(); const n2 = $('#q'); n2.focus(); n2.setSelectionRange(n2.value.length, n2.value.length); }, 300); };
@@ -644,7 +649,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
   function openBooking(id) {
     const build = () => { const b = S.bookings[id]; if (!b) return '<p>Cita no encontrada.</p>'; const wa = 'https://wa.me/51' + b.client.phone + '?text=' + encodeURIComponent(`Hola ${b.client.name.split(' ')[0]}, te recordamos tu cita de ${b.serviceName} el ${fmtD(b.date)} a las ${hm(b.start)} en ${cfg().name}. Código ${b.code}.`);
       return `<div class="row">${statusPill(b.status)}<span class="small muted">Código ${esc(b.code)} · reservada ${b.source === 'panel' ? 'por el salón' : 'en línea'}</span></div>
-        <div class="list"><div class="li"><span>Clienta</span><b>${esc(b.client.name)} · ${esc(b.client.phone)}</b></div>${b.client.email ? `<div class="li"><span>Correo</span><span>${esc(b.client.email)}</span></div>` : ''}<div class="li"><span>Servicio</span><b>${esc(b.serviceName)} · ${money(b.price)}</b></div><div class="li"><span>Cuándo</span><b>${esc(fmtD(b.date))} ${hm(b.start)}–${hm(b.end)}</b></div><div class="li"><span>Con</span><b>${esc(b.staffName)}</b></div>${b.client.note ? `<div class="li"><span>Notas</span><span>${esc(b.client.note)}</span></div>` : ''}${b.cancelReason ? `<div class="li"><span>Motivo</span><span>${esc(b.cancelReason)}</span></div>` : ''}</div>
+        <div class="list"><div class="li"><span>Clienta</span><b>${esc(b.client.name)} · ${esc(b.client.phone)}</b></div>${b.client.dni ? `<div class="li"><span>DNI</span><b>${esc(b.client.dni)}</b></div>` : ''}${b.client.email ? `<div class="li"><span>Correo</span><span>${esc(b.client.email)}</span></div>` : ''}<div class="li"><span>Servicio</span><b>${esc(b.serviceName)} · ${money(b.price)}</b></div><div class="li"><span>Cuándo</span><b>${esc(fmtD(b.date))} ${hm(b.start)}–${hm(b.end)}</b></div><div class="li"><span>Con</span><b>${esc(b.staffName)}</b></div>${b.client.note ? `<div class="li"><span>Notas</span><span>${esc(b.client.note)}</span></div>` : ''}${b.cancelReason ? `<div class="li"><span>Motivo</span><span>${esc(b.cancelReason)}</span></div>` : ''}</div>
         <div class="row"><a class="btn sm" href="${esc(wa)}" target="_blank" rel="noopener">Recordatorio por WhatsApp</a><span class="small muted">Se abre WhatsApp con el mensaje listo; lo envías tú.</span></div>
         <div class="small muted">${(b.history || []).map((h) => `${esc(h.what)} · ${esc(h.by)} · ${new Date(h.at).toLocaleString('es-PE', { timeZone: 'America/Lima' })}`).join('<br>')}</div>`; };
     const b = S.bookings[id]; const open = b && b.status === 'confirmada';
@@ -660,6 +665,52 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
       <div class="row" style="margin-top:10px"><button class="btn primary" id="sh-c">Copiar enlace</button><a class="btn" href="${esc(wa)}" target="_blank" rel="noopener">Enviar por WhatsApp</a></div>
       <p class="small muted">Ponlo en la bio de Instagram y TikTok, en tu perfil de Google y en el estado de WhatsApp.</p>`, '', (m) => {
       $('#sh-c', m).onclick = async () => { try { await navigator.clipboard.writeText(url); toast('Enlace copiado'); } catch (e) { toast('Mantén presionado el enlace para copiarlo', true); } }; });
+  }
+
+  // ───── panel: base de datos de clientas (una por DNI, con su historial) ─────
+  function clientRows() {
+    const m = {};
+    vals(S.clients).forEach((c) => (m[c.id] = { dni: c.id, name: c.name, phone: c.phone, email: c.email, notes: c.notes || '', firstSeen: c.firstSeen || '', list: [] }));
+    vals(S.bookings).forEach((b) => { const d = b.client && b.client.dni; if (!d) return; const r = (m[d] = m[d] || { dni: d, name: b.client.name, phone: b.client.phone, email: b.client.email, notes: '', firstSeen: b.createdAt || '', list: [] }); r.list.push(b); });
+    const n = nowL();
+    return Object.values(m).map((r) => { const ok = r.list.filter((b) => b.status === 'completada'); const last = r.list.filter((b) => b.status !== 'cancelada').sort((a, b) => (b.date + hm(b.start)).localeCompare(a.date + hm(a.start)));
+      const next = last.filter((b) => b.status === 'confirmada' && epoch(b.date, b.end) >= n.ts).pop();
+      return Object.assign(r, { total: r.list.filter((b) => b.status !== 'cancelada').length, done: ok.length, spent: ok.reduce((a, b) => a + (Number(b.price) || 0), 0), noShow: r.list.filter((b) => b.status === 'ausente').length,
+        last: (last.find((b) => b.status === 'completada') || {}).date || '', next: next ? next.date + ' ' + hm(next.start) : '' }); })
+      .sort((a, b) => (b.next || b.last || b.firstSeen || '').localeCompare(a.next || a.last || a.firstSeen || '') || a.name.localeCompare(b.name));
+  }
+  function viewClients() {
+    const q = (UI.cq || '').toLowerCase(); const all = clientRows();
+    const rows = all.filter((r) => !q || (r.name + ' ' + r.dni + ' ' + r.phone + ' ' + (r.email || '')).toLowerCase().includes(q));
+    const k = (l, v) => `<div class="kpi"><span>${l}</span><b>${v}</b></div>`;
+    return { html: `<div class="row"><h1 class="grow">Clientas</h1><button class="btn" id="cx-csv">Exportar a Excel (CSV)</button></div>
+      <div class="kpis">${k('Clientas registradas', all.length)}${k('Con cita próxima', all.filter((r) => r.next).length)}${k('Atendidas al menos una vez', all.filter((r) => r.done).length)}${k('Gastado en total (atendidas)', money(all.reduce((a, r) => a + r.spent, 0)))}</div>
+      <div class="row"><input type="search" id="cq" placeholder="Buscar por nombre, DNI, celular o correo" value="${esc(UI.cq || '')}" style="max-width:340px"></div>
+      ${rows.length ? `<div class="tbl"><table><thead><tr><th>Clienta</th><th>DNI</th><th>Celular</th><th class="n">Citas</th><th class="n">Atendidas</th><th class="n">Gastado</th><th>Última visita</th><th>Próxima cita</th><th></th></tr></thead><tbody>${rows.map((r) => `<tr><td><b>${esc(r.name)}</b>${r.email ? `<br><span class="small muted">${esc(r.email)}</span>` : ''}${r.notes ? `<br><span class="small muted">📝 ${esc(r.notes)}</span>` : ''}</td><td>${esc(r.dni)}</td><td><a href="https://wa.me/51${esc(r.phone)}" target="_blank" rel="noopener">${esc(r.phone)}</a></td><td class="n">${r.total}</td><td class="n">${r.done}${r.noShow ? ` <span class="small muted">(${r.noShow} no asistió)</span>` : ''}</td><td class="n">${money(r.spent)}</td><td>${r.last ? esc(fmtD(r.last, { weekday: 'short', month: 'short' })) : '—'}</td><td>${r.next ? esc(fmtD(r.next.slice(0, 10), { weekday: 'short', month: 'short' })) + ' ' + r.next.slice(11) : '—'}</td><td><button class="btn sm" data-cl="${esc(r.dni)}">Ficha</button></td></tr>`).join('')}</tbody></table></div>`
+        : `<div class="card" style="text-align:center"><p class="muted">${all.length ? 'Ninguna clienta coincide con la búsqueda.' : 'Aún no hay clientas. Cada reserva con DNI se agrega aquí automáticamente.'}</p></div>`}
+      <p class="small muted">Contiene datos personales (DNI, celular): solo las cuentas del salón la ven. Úsala para atender y contactar a tus clientas.</p>`,
+      after: (a) => {
+        const qi = $('#cq'); let t; qi.oninput = () => { clearTimeout(t); t = setTimeout(() => { UI.cq = qi.value; render(); const n2 = $('#cq'); n2.focus(); n2.setSelectionRange(n2.value.length, n2.value.length); }, 300); };
+        $$('[data-cl]', a).forEach((b) => (b.onclick = () => openClient(b.dataset.cl)));
+        $('#cx-csv').onclick = () => exportClients(all);
+      } };
+  }
+  function openClient(dni) {
+    const r = clientRows().find((x) => x.dni === dni); if (!r) return;
+    const hist = r.list.slice().sort((a, b) => (b.date + hm(b.start)).localeCompare(a.date + hm(a.start)));
+    modal('Ficha de ' + r.name, `<div class="list"><div class="li"><span>DNI</span><b>${esc(r.dni)}</b></div><div class="li"><span>Celular</span><b>${esc(r.phone)}</b></div>${r.email ? `<div class="li"><span>Correo</span><span>${esc(r.email)}</span></div>` : ''}<div class="li"><span>Atendidas</span><b>${r.done} · ${money(r.spent)}</b></div></div>
+      <label class="f" for="cl-notes"><span>Notas del salón (alergias, preferencias, forma de uña…)</span><textarea id="cl-notes" rows="3">${esc(r.notes)}</textarea></label>
+      <b class="small">Historial</b><div class="list">${hist.map((b) => `<div class="li"><span>${esc(fmtD(b.date, { weekday: 'short', month: 'short' }))} ${hm(b.start)} · ${esc(b.serviceName)} · ${esc(b.staffName)}</span>${statusPill(b.status)}</div>`).join('') || '<p class="small muted">Sin citas.</p>'}</div>`,
+      `<span class="err grow" id="cl-e"></span><a class="btn" href="https://wa.me/51${esc(r.phone)}" target="_blank" rel="noopener">WhatsApp</a><button class="btn primary" id="cl-ok">Guardar notas</button>`,
+      (m) => { $('#cl-ok', m).onclick = (e) => guard(e.currentTarget, async () => { const cur = S.clients[dni] || { id: dni, name: r.name, phone: r.phone, email: r.email || '' }; await put('clients', Object.assign({}, cur, { notes: $('#cl-notes', m).value.trim() })); closeModal(); toast('Notas guardadas'); }).catch((er) => ($('#cl-e', m).textContent = er.message)); });
+  }
+  function exportClients(rows) {
+    const cell = (v) => { const t = String(v == null ? '' : v); return /[";\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
+    const head = ['Nombre', 'DNI', 'Celular', 'Correo', 'Citas', 'Atendidas', 'No asistió', 'Gastado (S/)', 'Última visita', 'Próxima cita', 'Notas'];
+    const lines = [head].concat(rows.map((r) => [r.name, r.dni, r.phone, r.email || '', r.total, r.done, r.noShow, r.spent.toFixed(2), r.last, r.next, r.notes]));
+    const blob = new Blob(['\ufeff' + lines.map((l) => l.map(cell).join(';')).join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'clientas-nails-atelier-' + nowL().date + '.csv'; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+    toast('Archivo descargado: ábrelo con Excel');
   }
 
   // ───── panel: agenda del día por profesional ─────

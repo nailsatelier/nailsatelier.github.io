@@ -57,6 +57,36 @@ drop policy if exists p_admins_self on admins;       create policy p_admins_self
 -- ───────── funciones públicas (validan todo en el servidor) ─────────
 create or replace function lima_now() returns timestamp language sql stable as $$ select now() at time zone 'America/Lima' $$;
 
+-- ════════ DNI en las citas y base de datos de clientas ════════
+alter table bookings add column if not exists client_dni text;
+do $$ begin
+  if not exists (select 1 from pg_constraint where conname = 'bookings_client_dni_formato') then
+    alter table bookings add constraint bookings_client_dni_formato check (client_dni is null or client_dni ~ '^(\d{8}|[A-Z0-9]{9,12})$');
+  end if;
+end $$;
+create index if not exists bookings_client_dni_idx on bookings (client_dni);
+
+-- Una fila por clienta (por DNI). Se llena sola con cada reserva; el salón puede agregar notas.
+create table if not exists clients (
+  dni text primary key check (dni ~ '^(\d{8}|[A-Z0-9]{9,12})$'),
+  name text not null, phone text, email text, notes text,
+  first_seen timestamptz not null default now(), last_seen timestamptz not null default now()
+);
+alter table clients enable row level security;
+drop policy if exists p_clients_admin on clients; create policy p_clients_admin on clients for all using (is_admin()) with check (is_admin());
+
+create or replace function sync_client() returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if new.client_dni is not null then
+    insert into clients (dni, name, phone, email) values (new.client_dni, new.client_name, new.client_phone, new.client_email)
+    on conflict (dni) do update set name = excluded.name, phone = excluded.phone, email = coalesce(excluded.email, clients.email), last_seen = now();
+  end if;
+  return new;
+end $$;
+revoke execute on function sync_client() from anon, authenticated, public;
+drop trigger if exists bookings_sync_client on bookings;
+create trigger bookings_sync_client after insert or update of client_dni, client_name, client_phone, client_email on bookings for each row execute function sync_client();
+
 -- Horarios ocupados, sin datos personales.
 create or replace function busy_blocks(p_from date, p_to date)
 returns table(staff_id text, date date, block_start int, block_end int) language sql stable security definer set search_path = public as $$
@@ -74,14 +104,16 @@ $$;
 create or replace function new_code() returns text language sql volatile as $$
   select 'C-' || upper(substr(replace(gen_random_uuid()::text, '-', ''), 1, 6)) $$;
 
-create or replace function book(p_service text, p_staff text, p_date date, p_start int, p_name text, p_phone text, p_email text default null, p_note text default null)
+drop function if exists book(text, text, date, int, text, text, text, text);
+create or replace function book(p_service text, p_staff text, p_date date, p_start int, p_name text, p_phone text, p_email text default null, p_note text default null, p_dni text default null)
 returns jsonb language plpgsql security definer set search_path = public as $$
 declare sv services; cfg jsonb; st text; s0 int; e0 int; dur int; ln timestamp := lima_now(); b bookings; phone text := regexp_replace(coalesce(p_phone,''), '\D', '', 'g');
-        min_notice int; max_days int; cand text;
+        min_notice int; max_days int; cand text; dni text := upper(regexp_replace(coalesce(p_dni, ''), '[^0-9A-Za-z]', '', 'g'));
 begin
   if length(phone) = 11 and left(phone, 2) = '51' then phone := substr(phone, 3); end if;
   if length(trim(coalesce(p_name, ''))) < 2 then raise exception 'Escribe tu nombre.'; end if;
   if phone !~ '^9\d{8}$' then raise exception 'El celular debe tener 9 dígitos y empezar con 9.'; end if;
+  if dni !~ '^(\d{8}|[A-Z0-9]{9,12})$' then raise exception 'Escribe tu DNI (8 dígitos) o carné de extranjería.'; end if;
   if p_email is not null and p_email <> '' and p_email !~ '^[^@\s]+@[^@\s]+\.[^@\s]+$' then raise exception 'El correo no es válido.'; end if;
   select * into sv from services where id = p_service and active; if not found then raise exception 'Elige un servicio.'; end if;
   select data into cfg from settings where id = 'main'; cfg := coalesce(cfg, '{}');
@@ -102,9 +134,9 @@ begin
   end loop;
   if st is null then raise exception 'Ese horario ya no está disponible. Elige otro.'; end if;
   begin
-    insert into bookings (id, code, service_id, service_name, staff_id, staff_name, date, start_min, end_min, block_start, block_end, price, client_name, client_phone, client_email, client_note, source, history)
+    insert into bookings (id, code, service_id, service_name, staff_id, staff_name, date, start_min, end_min, block_start, block_end, price, client_name, client_phone, client_email, client_note, client_dni, source, history)
     values ('b' || replace(gen_random_uuid()::text, '-', ''), new_code(), sv.id, sv.name, st, (select name from staff where id = st), p_date, p_start, p_start + dur, s0, e0, sv.price,
-            trim(p_name), phone, nullif(trim(coalesce(p_email, '')), ''), left(nullif(trim(coalesce(p_note, '')), ''), 300), case when is_admin() then 'panel' else 'publico' end,
+            trim(p_name), phone, nullif(trim(coalesce(p_email, '')), ''), left(nullif(trim(coalesce(p_note, '')), ''), 300), dni, case when is_admin() then 'panel' else 'publico' end,
             jsonb_build_array(jsonb_build_object('at', now(), 'what', 'Reservada', 'by', case when is_admin() then 'Salón' else 'Clienta' end)))
     returning * into b;
   exception when exclusion_violation then raise exception 'Ese horario se acaba de ocupar. Elige otro.';
@@ -157,7 +189,7 @@ begin
   return my_booking(b.code, b.client_phone);
 end $$;
 
-grant execute on function busy_blocks(date, date), book(text, text, date, int, text, text, text, text), my_booking(text, text), cancel_my_booking(text, text), reschedule_booking(text, text, date, int) to anon, authenticated;
+grant execute on function busy_blocks(date, date), book(text, text, date, int, text, text, text, text, text), my_booking(text, text), cancel_my_booking(text, text), reschedule_booking(text, text, date, int) to anon, authenticated;
 
 insert into settings (id, data) values ('main', '{"name":"Nails Atelier"}') on conflict (id) do nothing;
 
