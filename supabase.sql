@@ -153,3 +153,19 @@ end $$;
 grant execute on function busy_blocks(date, date), book(text, text, date, int, text, text, text, text), my_booking(text, text), cancel_my_booking(text, text), reschedule_booking(text, text, date, int) to anon, authenticated;
 
 insert into settings (id, data) values ('main', '{"name":"Nails Atelier"}') on conflict (id) do nothing;
+
+-- Cuentas del salón por correo: al crearse un usuario con uno de estos correos, recibe acceso al panel.
+create table if not exists admin_emails (email text primary key);
+alter table admin_emails enable row level security;
+insert into admin_emails (email) values ('mymtelecomunicacionessixseven@gmail.com'), ('m-infantes@hotmail.com') on conflict do nothing;
+create or replace function auto_admin() returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if exists (select 1 from admin_emails where lower(email) = lower(new.email)) then
+    insert into admins (user_id) values (new.id) on conflict do nothing;
+  end if;
+  return new;
+end $$;
+revoke execute on function auto_admin() from anon, authenticated, public;
+drop trigger if exists on_auth_user_auto_admin on auth.users;
+create trigger on_auth_user_auto_admin after insert on auth.users for each row execute function auto_admin();
+insert into admins (user_id) select id from auth.users where lower(email) in (select lower(email) from admin_emails) on conflict do nothing;
