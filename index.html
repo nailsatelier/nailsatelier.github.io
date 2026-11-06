@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="es-PE">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nails Atelier</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#f8e1ea">
+<meta property="og:title" content="Nails Atelier · Reserva tu cita">
+<meta name="description" content="Reserva tu cita de manicure, pedicure y uñas esculpidas en Nails Atelier.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: agenda de citas en dos caras: página pública de reserva (centrada, tipo tarjeta) y panel del salón (barra superior + pestañas). */
+:root{
+  /* Nails Atelier: rosa empolvado, lavanda, menta y durazno; malva profundo para botones y texto destacado. */
+  --lacquer:#9b4f78; --lacquer-ink:#7a3a5d; --blush:#f8e1ea; --lav:#e8e1f6; --mint:#dcf1e8; --peach:#fde6d8; --butter:#fbf1cf;
+  --ink:#3b2f37; --muted:#7c6d76; --bg:#fdf8f9; --surface:#ffffff; --surface-2:#f7eff3; --line:#eedfe6;
+  --ok:#2f7d5c; --warn:#a86a1d; --bad:#b43a4f;
+  --f-display:'Cormorant Garamond','Georgia',serif; --f-body:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--lacquer:#e4a6c4;--lacquer-ink:#f0c2d8;--blush:#3b2633;--lav:#2f2a40;--mint:#22362f;--peach:#3d2c25;--butter:#38331f;--ink:#f6edf2;--muted:#c2b0ba;--bg:#1b1519;--surface:#241c21;--surface-2:#2d242a;--line:#43363e;--ok:#7fd1aa;--warn:#e9b56a;--bad:#ff8fa0;--on-accent:#2a1a23;color-scheme:dark}}
+:root[data-theme="dark"]{--lacquer:#e4a6c4;--lacquer-ink:#f0c2d8;--blush:#3b2633;--lav:#2f2a40;--mint:#22362f;--peach:#3d2c25;--butter:#38331f;--ink:#f6edf2;--muted:#c2b0ba;--bg:#1b1519;--surface:#241c21;--surface-2:#2d242a;--line:#43363e;--ok:#7fd1aa;--warn:#e9b56a;--bad:#ff8fa0;--on-accent:#2a1a23;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--f-display);margin:0;line-height:1.1;text-wrap:balance}
+h1{font-size:2.1rem;font-weight:600}
+h2{font-size:1.35rem;font-weight:700}
+h3{font-size:1.05rem;font-weight:700}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--lacquer)}
+:focus-visible{outline:2px solid var(--lacquer);outline-offset:2px}
+.wrap{max-width:1040px;margin:0 auto;padding:20px 16px 60px;display:flex;flex-direction:column;gap:16px}
+.top{background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10}
+.top .in{max-width:1040px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:9px;font-family:var(--f-display);font-weight:800;font-size:1.15rem;margin-right:auto}
+.logo .dot{width:30px;height:30px;border-radius:50% 50% 50% 8px;background:var(--lacquer);display:grid;place-items:center;color:#fff;font-size:.9rem}
+.tabs{display:flex;gap:4px;flex-wrap:wrap}
+.tab{border:0;background:transparent;padding:7px 11px;border-radius:999px;font-weight:600;cursor:pointer;color:var(--muted)}
+.tab[aria-current="page"]{background:var(--blush);color:var(--lacquer-ink)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);background:var(--surface);padding:9px 14px;border-radius:10px;cursor:pointer;font-weight:600;font-size:.92rem;white-space:nowrap;text-decoration:none;color:var(--ink)}
+.btn:hover{background:var(--surface-2)}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.btn.primary{background:var(--lacquer);border-color:var(--lacquer);color:var(--on-accent,#fff)}
+.btn.primary:hover{background:var(--lacquer-ink);border-color:var(--lacquer-ink)}
+.btn.danger{color:var(--bad)}
+.btn.sm{padding:5px 10px;font-size:.84rem}
+.btn.ghost{border-color:transparent;background:transparent}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;min-width:0}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.grow{flex:1 1 auto}
+.muted{color:var(--muted)}.small{font-size:.86rem}
+.grid{display:grid;gap:12px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr))}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:.82rem;font-weight:600;color:var(--muted);min-width:0}
+input[type=text],input[type=tel],input[type=email],input[type=number],input[type=date],input[type=time],input[type=search],select,textarea{background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:8px 10px;font-size:.95rem;width:100%;min-width:0;color:var(--ink)}
+textarea{min-height:70px;resize:vertical}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:10px 12px}
+.chk{display:inline-flex;gap:6px;align-items:center;font-size:.9rem;color:var(--ink);font-weight:500}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:.76rem;font-weight:700;padding:2px 9px;border-radius:999px;background:var(--surface-2);white-space:nowrap}
+.pill.ok{color:var(--ok)}.pill.bad{color:var(--bad)}.pill.warn{color:var(--warn)}.pill.lac{color:var(--lacquer-ink);background:var(--blush)}
+.tag-demo{font-size:.66rem;font-weight:800;letter-spacing:.08em;background:var(--warn);color:#fff;border-radius:4px;padding:1px 5px;vertical-align:middle}
+.banner{border:1px solid var(--line);background:var(--surface-2);border-radius:12px;padding:10px 14px;font-size:.9rem;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.banner.warn{border-color:color-mix(in srgb,var(--warn) 45%,var(--line));background:color-mix(in srgb,var(--warn) 10%,var(--surface))}
+.banner.ok{border-color:color-mix(in srgb,var(--ok) 45%,var(--line));background:color-mix(in srgb,var(--ok) 10%,var(--surface))}
+.err{color:var(--bad);font-weight:600;font-size:.9rem}
+.list{display:flex;flex-direction:column;gap:8px}
+.li{display:flex;gap:10px;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:12px;padding:10px 12px;flex-wrap:wrap;background:var(--surface)}
+.svc{display:flex;gap:12px;align-items:flex-start;text-align:left;width:100%;border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:14px;cursor:pointer}
+.svc:hover{border-color:var(--lacquer)}
+.svc .sw{width:12px;align-self:stretch;border-radius:6px;flex:none}
+.svc b{font-family:var(--f-display);font-size:1.05rem}
+.booker{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr) minmax(0,.9fr);gap:0;background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.booker>section{padding:18px;min-width:0}
+.booker>section+section{border-left:1px solid var(--line)}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:10px}
+.cal .dw{font-size:.72rem;font-weight:700;color:var(--muted);text-align:center;text-transform:uppercase;letter-spacing:.05em;padding:4px 0}
+.day{aspect-ratio:1;border:0;border-radius:10px;background:transparent;font-weight:600;cursor:pointer;color:var(--muted);font-variant-numeric:tabular-nums}
+.day.av{background:var(--blush);color:var(--lacquer-ink)}
+.day.av:hover{outline:2px solid var(--lacquer)}
+.day[aria-pressed="true"]{background:var(--lacquer);color:#fff}
+.day:disabled{cursor:default;opacity:.45}
+.slots{display:flex;flex-direction:column;gap:6px;max-height:380px;overflow:auto;margin-top:10px}
+.slot{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px;font-weight:700;cursor:pointer;font-variant-numeric:tabular-nums}
+.slot:hover{border-color:var(--lacquer);color:var(--lacquer-ink)}
+.slot[aria-pressed="true"]{background:var(--lacquer);border-color:var(--lacquer);color:#fff}
+.meta{display:flex;flex-direction:column;gap:6px;font-size:.92rem;margin-top:10px}
+.meta span{display:flex;gap:8px;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;background:var(--surface-2)}
+.seg button{border:0;background:transparent;padding:5px 12px;border-radius:999px;font-weight:600;cursor:pointer;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);text-align:left;background:var(--surface-2);padding:8px 10px;white-space:nowrap}
+td{padding:9px 10px;border-top:1px solid var(--line);vertical-align:middle}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.agenda{display:grid;gap:0;overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.ag-h{padding:8px;font-weight:700;font-size:.85rem;text-align:center;border-bottom:1px solid var(--line);background:var(--surface-2);position:sticky;top:0}
+.ag-t div{height:var(--rh);font-size:.7rem;color:var(--muted);text-align:right;padding-right:6px;transform:translateY(-.5em);font-variant-numeric:tabular-nums}
+.ag-c{position:relative;border-left:1px solid var(--line);background-image:repeating-linear-gradient(to bottom,transparent 0,transparent calc(var(--rh) - 1px),var(--line) calc(var(--rh) - 1px),var(--line) var(--rh))}
+.ag-off{position:absolute;left:0;right:0;background:repeating-linear-gradient(45deg,var(--surface-2),var(--surface-2) 5px,transparent 5px,transparent 10px)}
+.ag-b{position:absolute;left:3px;right:3px;border-radius:8px;padding:3px 6px;font-size:.74rem;line-height:1.2;overflow:hidden;color:#3b2f37;border:0;text-align:left;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(155,79,120,.25)}
+.ag-b b{display:block;font-size:.78rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.modal-bg{position:fixed;inset:0;background:rgba(20,10,15,.45);z-index:50;display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:24px 12px}
+.modal{background:var(--surface);border-radius:16px;width:min(640px,100%);display:flex;flex-direction:column}
+.modal-h{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line)}
+.modal-h h2{margin-right:auto}
+.modal-b{padding:16px 18px;display:flex;flex-direction:column;gap:12px}
+.modal-f{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;align-items:center}
+.toast{position:fixed;right:16px;bottom:16px;z-index:80;display:flex;flex-direction:column;gap:8px;max-width:min(380px,calc(100vw - 32px))}
+.toast div{background:var(--ink);color:var(--bg);padding:10px 14px;border-radius:10px;font-size:.9rem}
+.toast div.bad{background:var(--bad);color:#fff}
+.hero{display:flex;flex-direction:column;gap:6px;text-align:center;padding:10px 0 4px}
+.hero .av{width:64px;height:64px;border-radius:50% 50% 50% 14px;background:var(--lacquer);color:#fff;display:grid;place-items:center;font-family:var(--f-display);font-weight:800;font-size:1.6rem;margin:0 auto 6px}
+.done{text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center;padding:24px 16px}
+.done .check{width:58px;height:58px;border-radius:50%;background:color-mix(in srgb,var(--ok) 15%,var(--surface));color:var(--ok);display:grid;place-items:center;font-size:1.8rem}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,160px),1fr));gap:10px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px}
+.kpi span{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700}
+.kpi b{font-family:var(--f-body);font-size:1.5rem;font-variant-numeric:tabular-nums}
+@media (max-width:860px){.booker{grid-template-columns:minmax(0,1fr)}.booker>section+section{border-left:0;border-top:1px solid var(--line)}.slots{max-height:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr))}}
+
+/* Marca Nails Atelier */
+.na-logo{display:flex;align-items:center;gap:10px;min-width:0}
+.na-logo svg{width:38px;height:38px;flex:none}
+.na-word{display:flex;flex-direction:column;line-height:1;min-width:0}
+.na-word b{font-family:'Cormorant Garamond',Georgia,serif;font-weight:600;font-size:1.45rem;letter-spacing:.01em;color:var(--ink);white-space:nowrap}
+.na-word b i{font-style:italic;color:var(--lacquer)}
+.na-word small{font-size:.62rem;letter-spacing:.28em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-top:3px}
+.na-hero{position:relative;overflow:hidden;border-radius:26px;padding:22px 20px;background:linear-gradient(135deg,var(--blush) 0%,var(--lav) 55%,var(--mint) 100%);display:flex;flex-direction:column;gap:6px}
+.na-hero::before,.na-hero::after{content:"";position:absolute;border-radius:50%;filter:blur(2px);opacity:.7}
+.na-hero::before{width:140px;height:140px;right:-30px;top:-40px;background:var(--peach)}
+.na-hero::after{width:90px;height:90px;right:60px;bottom:-40px;background:var(--butter)}
+.na-hero>*{position:relative}
+.na-hero .na-tag{font-size:.7rem;letter-spacing:.24em;text-transform:uppercase;color:var(--lacquer-ink);font-weight:700}
+.na-hero h1{font-size:2.3rem}
+.na-hero p{margin:0;color:var(--ink);opacity:.8}
+/* Página de la clienta: pensada para celular, un paso por pantalla y botón fijo abajo. */
+.ptop{background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10}
+.pin{max-width:520px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:10px}
+.pav{width:34px;height:34px;border-radius:50% 50% 50% 9px;background:var(--lacquer);color:#fff;display:grid;place-items:center;font-family:var(--f-display);font-weight:800;flex:none}
+.pname{font-family:var(--f-display);font-size:1.05rem;margin-right:auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.plink{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 12px;font-weight:700;font-size:.85rem;cursor:pointer;color:var(--ink)}
+.mwrap{max-width:520px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:14px;padding-bottom:96px}
+.w-head{display:grid;grid-template-columns:40px 1fr 40px;align-items:center;gap:10px}
+.w-back{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--surface);font-size:1.5rem;line-height:1;cursor:pointer;color:var(--ink)}
+.w-prog{display:flex;gap:5px}.w-prog i{flex:1;height:5px;border-radius:9px;background:var(--line)}.w-prog i.on{background:var(--lacquer)}
+.w-n{font-size:.8rem;color:var(--muted);font-weight:700;text-align:right}
+.w-title{font-size:2rem;font-weight:600;letter-spacing:0;line-height:1.05}
+.w-sub{color:var(--muted);margin:-6px 0 0}
+.w-chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}.w-chips::-webkit-scrollbar{display:none}
+.w-chip{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:9px 15px;font-weight:700;cursor:pointer;color:var(--ink)}
+.w-chip[aria-pressed="true"]{background:var(--blush);border-color:var(--lacquer);color:var(--lacquer-ink)}
+.w-list{display:flex;flex-direction:column;gap:10px}
+.w-opt{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:20px;box-shadow:0 2px 10px rgba(155,79,120,.06);padding:14px;min-height:72px;cursor:pointer;color:var(--ink)}
+.w-opt:active{transform:scale(.99)}.w-opt:hover{border-color:var(--lacquer)}
+.w-sw{width:44px;height:44px;border-radius:50%;flex:none;box-shadow:inset 0 0 0 3px rgba(255,255,255,.6)}
+.w-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.w-txt b{font-size:1.05rem}.w-txt small{color:var(--muted);font-size:.86rem}
+.w-meta{font-weight:700}
+.w-price{font-family:var(--f-body);font-weight:700;font-size:1rem;white-space:nowrap;color:var(--lacquer-ink)}
+.w-ava{width:46px;height:46px;border-radius:50%;background:var(--blush);color:var(--lacquer-ink);display:grid;place-items:center;font-family:var(--f-display);font-weight:800;font-size:1.2rem;flex:none}.w-ava.any{background:var(--lav);color:var(--lacquer-ink)}
+.w-go{font-size:1.6rem;color:var(--muted)}
+.w-days{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 6px;scroll-snap-type:x proximity;scrollbar-width:none}.w-days::-webkit-scrollbar{display:none}
+.w-day{flex:none;width:64px;padding:8px 0;border:1px solid var(--line);background:var(--surface);border-radius:14px;display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;scroll-snap-align:start;color:var(--ink)}
+.w-day b{font-family:var(--f-body)!important;font-weight:700}.w-day small{font-size:.72rem;color:var(--muted);text-transform:capitalize;font-weight:600}.w-day b{font-family:var(--f-display);font-size:1.35rem}
+.w-day[aria-pressed="true"]{background:var(--lacquer);border-color:var(--lacquer);color:var(--on-accent,#fff)}.w-day[aria-pressed="true"] small{color:#ffe3ec}
+.w-day:disabled{opacity:.35;cursor:default}.w-day.more{font-size:.78rem;font-weight:700;color:var(--lacquer-ink);justify-content:center}
+.w-date{font-weight:700;text-transform:capitalize;margin:0}
+.w-gl{font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:4px 0 -4px}
+.w-times{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.w-time{min-height:50px;border:1px solid var(--line);background:var(--surface);border-radius:12px;font-weight:800;font-size:1.02rem;cursor:pointer;font-variant-numeric:tabular-nums;color:var(--ink)}
+.w-time[aria-pressed="true"]{background:var(--lacquer);border-color:var(--lacquer);color:var(--on-accent,#fff)}
+.w-bar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(8px);border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px))}
+.w-cta{display:block;width:100%;max-width:488px;margin:0 auto;min-height:54px;border:0;border-radius:999px;background:var(--lacquer);color:var(--on-accent,#fff);letter-spacing:.02em;font-weight:800;font-size:1.08rem;cursor:pointer}
+.w-cta[disabled]{background:var(--line);color:var(--muted);cursor:default}
+.w-sum{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;background:linear-gradient(135deg,var(--blush),var(--lav));border-radius:16px;padding:14px 16px}
+.w-sum div{display:flex;flex-direction:column;gap:3px;min-width:0}.w-sum span{font-size:.9rem;color:var(--ink);text-transform:none}
+.w-form{display:flex;flex-direction:column;gap:12px}
+.w-f{display:flex;flex-direction:column;gap:5px;font-weight:700;font-size:.9rem}
+.w-f input,.w-f textarea{font-size:16px;padding:13px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);width:100%}
+.w-more summary{cursor:pointer;color:var(--lacquer-ink);font-weight:700;padding:4px 0}.w-more[open]{display:flex;flex-direction:column;gap:10px}
+.w-pol{font-size:.84rem;color:var(--muted);margin:0}
+.w-empty{text-align:center;padding:30px 10px;display:flex;flex-direction:column;gap:12px}
+.w-done{display:flex;flex-direction:column;gap:14px;align-items:stretch;text-align:center}
+.w-done .check{width:68px;height:68px;border-radius:50%;background:color-mix(in srgb,var(--ok) 15%,var(--surface));color:var(--ok);display:grid;place-items:center;font-size:2rem;margin:8px auto 0}
+.w-done .w-sum{text-align:left}
+.w-code{font-family:ui-monospace,Consolas,monospace;font-size:1.6rem;font-weight:800;letter-spacing:.12em;background:var(--surface);border:2px dashed var(--lacquer);border-radius:14px;padding:12px}
+.w-acts{display:flex;flex-direction:column;gap:10px}
+#mine input{font-size:16px;padding:12px 13px}#mine .btn{min-height:46px}#m-out .btn{min-height:46px;flex:1}
+.w-btn{display:flex;align-items:center;justify-content:center;min-height:50px;border:1px solid var(--line);background:var(--surface);border-radius:14px;font-weight:700;text-decoration:none;color:var(--ink);cursor:pointer;font-size:1rem}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<div id="app"><div class="wrap"><p class="muted">Cargando agenda…</p></div></div>
+<script>
+(function () {
+  'use strict';
+  // ───────── utilidades (hora de Lima, UTC−5 sin horario de verano) ─────────
+  const pad = (n) => String(n).padStart(2, '0');
+  const hm = (m) => pad(Math.floor(m / 60)) + ':' + pad(m % 60);
+  const pHM = (s) => { const [h, m] = String(s || '0:0').split(':').map(Number); return h * 60 + (m || 0); };
+  const addDays = (d, n) => { const x = new Date(d + 'T12:00:00Z'); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
+  const dow = (d) => new Date(d + 'T12:00:00Z').getUTCDay();
+  const epoch = (d, m) => { const [y, mo, da] = d.split('-').map(Number); return Date.UTC(y, mo - 1, da) + (m + 300) * 60000; };
+  const nowL = () => { const t = Date.now() - 5 * 3600000; const x = new Date(t); return { date: x.toISOString().slice(0, 10), min: x.getUTCHours() * 60 + x.getUTCMinutes(), ts: Date.now() }; };
+  const fmtD = (d, o) => new Intl.DateTimeFormat('es-PE', Object.assign({ timeZone: 'UTC', weekday: 'long', day: 'numeric', month: 'long' }, o || {})).format(new Date(d + 'T12:00:00Z'));
+  const money = (n) => 'S/ ' + (Math.round((Number(n) || 0) * 100) / 100).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const uid = (p) => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  const code = () => 'C-' + Math.random().toString(36).slice(2, 8).toUpperCase();
+  const normPhone = (s) => { let d = String(s || '').replace(/\D/g, ''); if (d.length === 11 && d.startsWith('51')) d = d.slice(2); return d; };
+  const $ = (s, el) => (el || document).querySelector(s);
+  const $$ = (s, el) => Array.from((el || document).querySelectorAll(s));
+  const DOWS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+
+  // ───────── datos ─────────
+  const COLLS = ['config', 'services', 'staff', 'timeoff', 'bookings'];
+  const S = {}; COLLS.forEach((c) => (S[c] = {}));
+  const DEF = { id: 'main', name: 'Nails Atelier', address: '', phone: '', slotStep: 15, minNotice: 120, maxDays: 30, depositPct: 0, payMethods: 'Efectivo, Yape, Plin', policy: 'Puedes cancelar o reprogramar sin costo hasta 3 horas antes de tu cita.' };
+  const cfg = () => Object.assign({}, DEF, S.config.main || {});
+  let backend = 'local'; let canEdit = false; let listeners = []; let sb = null; let session = null;
+  const CONF = window.NAILS_CONFIG || {};
+  const LS = 'nails-atelier.prueba.v1';
+  const notify = () => { clearTimeout(notify.t); notify.t = setTimeout(() => listeners.forEach((f) => f()), 30); };
+  function saveLocal() { try { localStorage.setItem(LS, JSON.stringify(S)); } catch (e) { /* sin almacenamiento */ } }
+  // Columnas de Supabase ↔ objetos de la interfaz
+  const MAP = {
+    config: { to: (c) => ({ id: 'main', data: c }), from: (r) => Object.assign({}, r.data || {}, { id: 'main' }) },
+    services: { to: (s) => ({ id: s.id, name: s.name, category: s.category || null, duration: Number(s.duration), price: Number(s.price) || 0, buffer_before: Number(s.bufferBefore) || 0, buffer_after: Number(s.bufferAfter) || 0, color: s.color || null, description: s.description || null, active: s.active !== false, sort: Number(s.order) || 0, demo: !!s.demo }),
+      from: (r) => ({ id: r.id, name: r.name, category: r.category || '', duration: r.duration, price: Number(r.price), bufferBefore: r.buffer_before, bufferAfter: r.buffer_after, color: r.color, description: r.description || '', active: r.active, order: r.sort, demo: r.demo }) },
+    staff: { to: (p) => ({ id: p.id, name: p.name, services: p.services || [], schedule: p.schedule || {}, active: p.active !== false, demo: !!p.demo }), from: (r) => ({ id: r.id, name: r.name, services: r.services || [], schedule: r.schedule || {}, active: r.active, demo: r.demo }) },
+    timeoff: { to: (o) => ({ id: o.id, staff_id: o.staffId, date: o.date, start_min: o.start, end_min: o.end, reason: o.reason || null }), from: (r) => ({ id: r.id, staffId: r.staff_id, date: r.date, start: r.start_min, end: r.end_min, reason: r.reason || '' }) },
+    bookings: { to: (b) => ({ id: b.id, code: b.code, service_id: b.serviceId, service_name: b.serviceName, staff_id: b.staffId, staff_name: b.staffName, date: b.date, start_min: b.start, end_min: b.end, block_start: b.blockStart, block_end: b.blockEnd, price: b.price, client_name: b.client.name, client_phone: b.client.phone, client_email: b.client.email || null, client_note: b.client.note || null, status: b.status, source: b.source, cancel_reason: b.cancelReason || null, history: b.history || [], demo: !!b.demo }),
+      from: (r) => ({ id: r.id, code: r.code, serviceId: r.service_id, serviceName: r.service_name, staffId: r.staff_id, staffName: r.staff_name, date: r.date, start: r.start_min, end: r.end_min, blockStart: r.block_start, blockEnd: r.block_end, price: Number(r.price), client: { name: r.client_name, phone: r.client_phone, email: r.client_email || '', note: r.client_note || '' }, status: r.status, source: r.source, cancelReason: r.cancel_reason || '', history: r.history || [], demo: r.demo, createdAt: r.created_at }) },
+  };
+  const TABLE = { config: 'settings', services: 'services', staff: 'staff', timeoff: 'timeoff', bookings: 'bookings' };
+  // Los mensajes de las funciones de la base (raise exception) llegan tal cual para mostrarlos a la clienta.
+  const sbErr = (e) => new Error((e && (e.message || e.details)) || 'No se pudo conectar. Revisa tu internet e intenta de nuevo.');
+  async function put(c, rec) {
+    rec = JSON.parse(JSON.stringify(rec)); S[c][rec.id] = rec; notify();
+    if (backend === 'supabase') { const { error } = await sb.from(TABLE[c]).upsert(MAP[c].to(rec)); if (error) { await loadAll().catch(() => {}); throw sbErr(error); } }
+    else saveLocal();
+    return rec;
+  }
+  async function del(c, id) {
+    delete S[c][id]; notify();
+    if (backend === 'supabase') { const { error } = await sb.from(TABLE[c]).delete().eq('id', id); if (error) { await loadAll().catch(() => {}); throw sbErr(error); } }
+    else saveLocal();
+  }
+  const vals = (o) => Object.values(o || {});
+  async function rpc(fn, args) { const { data, error } = await sb.rpc(fn, args); if (error) throw sbErr(error); return data; }
+  async function loadAll() {
+    if (backend !== 'supabase') return;
+    const get = async (c) => { const { data, error } = await sb.from(TABLE[c]).select('*'); if (error) throw sbErr(error); const m = {}; (data || []).forEach((r) => { const o = MAP[c].from(r); m[o.id] = o; }); S[c] = m; };
+    await Promise.all(['config', 'services', 'staff'].map(get));
+    if (canEdit) await Promise.all(['timeoff', 'bookings'].map(get));
+    else {
+      // Público: solo bloques ocupados, sin nombres ni celulares.
+      const n = nowL(); const rows = await rpc('busy_blocks', { p_from: n.date, p_to: addDays(n.date, Number(cfg().maxDays) + 1) });
+      const m = {}; (rows || []).forEach((r, i) => (m['x' + i] = { id: 'x' + i, staffId: r.staff_id, date: r.date, blockStart: r.block_start, blockEnd: r.block_end, status: 'confirmada', client: {} }));
+      S.bookings = m; S.timeoff = {};
+    }
+    notify();
+  }
+  async function checkAdmin() {
+    if (!session) return false;
+    const { data, error } = await sb.from('admins').select('user_id').eq('user_id', session.user.id).maybeSingle();
+    return !error && !!data;
+  }
+  async function init() {
+    if (CONF.supabaseUrl && CONF.supabaseAnonKey && window.supabase) {
+      sb = window.supabase.createClient(CONF.supabaseUrl, CONF.supabaseAnonKey, { auth: { persistSession: true, storageKey: 'nails-atelier-sesion' } });
+      backend = 'supabase';
+      try { session = (await sb.auth.getSession()).data.session; canEdit = await checkAdmin(); } catch (e) { session = null; canEdit = false; }
+      try { await loadAll(); } catch (e) { UI.loadError = e.message; }
+      setInterval(() => { if (!document.hidden && !modalEl) loadAll().catch(() => {}); }, canEdit ? 20000 : 60000);
+    } else {
+      // Sin config.js: modo de prueba en este navegador, para revisar el diseño antes de conectar Supabase.
+      backend = 'local'; canEdit = true;
+      try { const o = JSON.parse(localStorage.getItem(LS) || '{}'); COLLS.forEach((c) => (S[c] = o[c] || {})); } catch (e) { /* vacío */ }
+    }
+  }
+  async function login(email, password) {
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) throw new Error(/invalid/i.test(error.message) ? 'Correo o contraseña incorrectos.' : error.message);
+    session = data.session; canEdit = await checkAdmin();
+    if (!canEdit) { await sb.auth.signOut(); session = null; throw new Error('Esta cuenta no tiene acceso al panel del salón.'); }
+    await loadAll();
+  }
+  async function logout() { if (sb) await sb.auth.signOut(); session = null; canEdit = false; await loadAll().catch(() => {}); }
+  async function withLock(name, fn) { return fn(); } // en Supabase la base impide los cruces (restricción sin_cruces)
+
+  // ───────── disponibilidad (mismo modelo que Cal.com: tipo de cita + horario + reservas + ausencias) ─────────
+  const services = (all) => vals(S.services).filter((s) => all || s.active !== false).sort((a, b) => (a.order || 0) - (b.order || 0) || a.name.localeCompare(b.name));
+  const staffFor = (svcId) => vals(S.staff).filter((p) => p.active !== false && (p.services || []).includes(svcId));
+  const busyOf = (staffId, date, exceptId) => vals(S.bookings).filter((b) => b.staffId === staffId && b.date === date && b.status !== 'cancelada' && b.id !== exceptId).map((b) => [b.blockStart, b.blockEnd])
+    .concat(vals(S.timeoff).filter((o) => o.staffId === staffId && o.date === date).map((o) => [o.start, o.end]));
+  function slotsFor(svc, staffId, date, exceptId) {
+    const p = S.staff[staffId]; const c = cfg(); const n = nowL();
+    if (!p || !svc) return [];
+    if (date < n.date || date > addDays(n.date, Number(c.maxDays))) return [];
+    const wins = ((p.schedule || {})[dow(date)] || []);
+    const busy = busyOf(staffId, date, exceptId); const out = [];
+    const bb = Number(svc.bufferBefore) || 0, ba = Number(svc.bufferAfter) || 0, d = Number(svc.duration);
+    for (const [ws, we] of wins) {
+      for (let t = Math.ceil(ws / c.slotStep) * c.slotStep; t + d <= we; t += Number(c.slotStep)) {
+        if (epoch(date, t) < n.ts + Number(c.minNotice) * 60000) continue;
+        const s0 = t - bb, e0 = t + d + ba;
+        if (busy.some(([s, e]) => s < e0 && s0 < e)) continue;
+        out.push(t);
+      }
+    }
+    return out;
+  }
+  function slotsAny(svc, date, exceptId) {
+    const map = {};
+    staffFor(svc.id).forEach((p) => slotsFor(svc, p.id, date, exceptId).forEach((t) => { (map[t] = map[t] || []).push(p.id); }));
+    return map;
+  }
+  // "Cualquier profesional": se asigna a quien tenga menos citas ese día (reparto equitativo).
+  const pickStaff = (ids, date) => ids.slice().sort((a, b) => vals(S.bookings).filter((x) => x.staffId === a && x.date === date && x.status !== 'cancelada').length - vals(S.bookings).filter((x) => x.staffId === b && x.date === date && x.status !== 'cancelada').length)[0];
+
+  function checkClient(client) {
+    const name = String(client.name || '').trim(); const phone = normPhone(client.phone);
+    if (name.length < 2) throw new Error('Escribe tu nombre.');
+    if (!/^9\d{8}$/.test(phone)) throw new Error('El celular debe tener 9 dígitos y empezar con 9.');
+    if (client.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(client.email)) throw new Error('El correo no es válido.');
+    return { name, phone, email: String(client.email || '').trim(), note: String(client.note || '').trim().slice(0, 300) };
+  }
+  // En línea la reserva la valida y guarda la base (función book): elige profesional y bloquea cruces de forma atómica.
+  async function createBooking(o) {
+    const svc = S.services[o.svcId]; if (!svc) throw new Error('Elige un servicio.');
+    if (backend !== 'supabase' || o.exceptId) return createBookingLocal(o);
+    const cl = checkClient(o.client);
+    const r = await rpc('book', { p_service: svc.id, p_staff: o.anyStaff ? null : o.staffId, p_date: o.date, p_start: o.start, p_name: cl.name, p_phone: cl.phone, p_email: cl.email || null, p_note: cl.note || null });
+    const b = { id: r.id, code: r.code, serviceId: svc.id, serviceName: r.serviceName, staffId: r.staffId, staffName: r.staffName, date: r.date, start: r.start, end: r.end, price: Number(r.price), client: cl, status: 'confirmada' };
+    UI.lastB = b; loadAll().catch(() => {});
+    return b;
+  }
+  // Reprogramar: en línea mueve la misma cita (código + celular); la base rechaza cruces.
+  async function moveBooking(b, date, start, source, phone) {
+    if (backend !== 'supabase') return createBookingLocal({ svcId: b.serviceId, staffId: b.staffId, date, start, client: b.client, source, exceptId: b.id });
+    const r = await rpc('reschedule_booking', { p_code: b.code, p_phone: phone || b.client.phone, p_date: date, p_start: start });
+    await loadAll().catch(() => {});
+    return r;
+  }
+  async function createBookingLocal({ svcId, staffId, anyStaff, date, start, client, source, exceptId }) {
+    const svc = S.services[svcId]; if (!svc) throw new Error('Elige un servicio.');
+    const { name, phone } = checkClient(client);
+    const lockKey = (anyStaff ? 'any' : staffId) + '_' + date;
+    return withLock(lockKey, async () => {
+      let sid = staffId;
+      if (anyStaff) { const m = slotsAny(svc, date, exceptId); if (!m[start]) throw new Error('Ese horario ya no está disponible. Elige otro.'); sid = pickStaff(m[start], date); }
+      else if (!slotsFor(svc, sid, date, exceptId).includes(start)) throw new Error('Ese horario ya no está disponible. Elige otro.');
+      const at = new Date().toISOString();
+      const b = { id: uid('b'), code: code(), serviceId: svc.id, serviceName: svc.name, staffId: sid, staffName: (S.staff[sid] || {}).name || '', date, start, end: start + Number(svc.duration),
+        blockStart: start - (Number(svc.bufferBefore) || 0), blockEnd: start + Number(svc.duration) + (Number(svc.bufferAfter) || 0), price: Number(svc.price) || 0,
+        client: { name, phone, email: String(client.email || '').trim(), note: String(client.note || '').trim().slice(0, 300) }, status: 'confirmada', source: source || 'publico', createdAt: at,
+        history: [{ at, what: exceptId ? 'Reprogramada' : 'Reservada', by: source === 'panel' ? 'Salón' : 'Clienta' }] };
+      if (exceptId) { const old = S.bookings[exceptId]; await put('bookings', Object.assign({}, old, { status: 'cancelada', cancelReason: 'Reprogramada a ' + date + ' ' + hm(start), history: (old.history || []).concat({ at, what: 'Reprogramada', by: source === 'panel' ? 'Salón' : 'Clienta' }) })); b.rescheduledFrom = old.code; b.code = old.code; }
+      UI.lastB = b; return put('bookings', b);
+    });
+  }
+
+  // ───────── interfaz ─────────
+  const UI = { view: '', bk: { svc: '', staff: 'any', month: '', date: '', start: null, step: 1 }, done: null, adminDate: '', filter: 'proximas' };
+  const toast = (m, bad) => { let t = $('.toast'); if (!t) { t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); document.body.appendChild(t); } const d = document.createElement('div'); if (bad) d.className = 'bad'; d.textContent = m; t.appendChild(d); setTimeout(() => d.remove(), bad ? 6000 : 3200); };
+  let modalEl = null; let modalRefresh = null;
+  function modal(title, body, foot, mount, refresh) {
+    closeModal(); const bg = document.createElement('div'); bg.className = 'modal-bg';
+    bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-label="${esc(title)}"><div class="modal-h"><h2>${esc(title)}</h2><button class="btn ghost sm" data-x aria-label="Cerrar">✕</button></div><div class="modal-b">${body}</div>${foot ? `<div class="modal-f">${foot}</div>` : ''}</div>`;
+    bg.addEventListener('mousedown', (e) => { if (e.target === bg) closeModal(); }); $('[data-x]', bg).onclick = closeModal;
+    document.body.appendChild(bg); modalEl = bg; modalRefresh = refresh || null; if (mount) mount($('.modal', bg)); return $('.modal', bg);
+  }
+  function closeModal() { if (modalEl) modalEl.remove(); modalEl = null; modalRefresh = null; }
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+  const guard = async (btn, fn) => { if (btn.dataset.busy) return; btn.dataset.busy = '1'; btn.disabled = true; try { return await fn(); } finally { delete btn.dataset.busy; btn.disabled = false; } };
+  const opt = (v, l, s) => `<option value="${esc(v)}"${String(v) === String(s) ? ' selected' : ''}>${esc(l)}</option>`;
+  const statusPill = (s) => ({ confirmada: '<span class="pill lac">Confirmada</span>', completada: '<span class="pill ok">Atendida</span>', cancelada: '<span class="pill bad">Cancelada</span>', ausente: '<span class="pill warn">No asistió</span>' }[s] || esc(s));
+  const demo = (x) => (x && x.demo ? ' <span class="tag-demo">DEMO</span>' : '');
+  const ADMIN = [['citas', 'Citas'], ['agenda', 'Agenda'], ['servicios', 'Servicios'], ['equipo', 'Equipo y horarios'], ['ajustes', 'Ajustes']];
+  const PUB = ['reservar', 'mi-cita', 'ingresar'];
+  const routes = PUB.concat(ADMIN.map((x) => x[0]));
+  function go(v) { if (!routes.includes(v)) v = canEdit ? 'citas' : 'reservar';
+    if (canEdit && v === 'ingresar') v = UI.want || 'citas';
+    if (!canEdit && !PUB.includes(v)) { if (backend === 'supabase') { UI.want = v; v = 'ingresar'; } else v = 'reservar'; } UI.view = v; try { history.replaceState(null, '', '#' + v); } catch (e) {} render(); window.scrollTo(0, 0); }
+  window.addEventListener('hashchange', () => { const v = location.hash.slice(1); if (v && v !== UI.view) go(v); });
+  document.addEventListener('click', (e) => { const b = e.target.closest('[data-go]'); if (b) { e.preventDefault(); go(b.dataset.go); } });
+
+  const LOGO = (id) => `<svg viewBox="0 0 48 48" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f6c9d9"/><stop offset=".55" stop-color="#dccff3"/><stop offset="1" stop-color="#bfe6d6"/></linearGradient></defs><circle cx="24" cy="24" r="23" fill="#fff" stroke="#eedfe6"/><path d="M24 7c-6.6 0-10.5 6.4-10.5 14.6V33c0 4.7 4.6 8 10.5 8s10.5-3.3 10.5-8V21.6C34.5 13.4 30.6 7 24 7z" fill="url(#${id})" stroke="#9b4f78" stroke-width="1.4"/><path d="M19 14.5c1.4-2.6 3.2-3.8 5-4" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" opacity=".9"/><path d="M37.5 9.5l.9 2.2 2.2.9-2.2.9-.9 2.2-.9-2.2-2.2-.9 2.2-.9z" fill="#9b4f78"/></svg>`;
+  const brand = (id) => { const n = cfg().name || 'Nails Atelier'; const m = n.match(/^(.*?)(\s+\S+)$/); return `<span class="na-logo">${LOGO(id)}<span class="na-word"><b>${m ? esc(m[1]) + ' <i>' + esc(m[2].trim()) + '</i>' : esc(n)}</b><small>Nail studio</small></span></span>`; };
+  function header() {
+    const c = cfg(); const pub = PUB.includes(UI.view);
+    if (pub) return `<header class="ptop"><div class="pin"><span class="pname">${brand('lg1')}</span>
+      ${UI.view === 'reservar' ? '<button class="plink" data-go="mi-cita">Mi cita</button>' : '<button class="plink" data-go="reservar">Reservar</button>'}${canEdit ? '<button class="plink" data-go="citas" title="Solo lo ves tú">Panel</button>' : ''}</div></header>`;
+    return `<header class="top"><div class="in"><div class="logo">${brand('lg2')}</div>
+      <nav class="tabs">${ADMIN.map(([k, l]) => `<button class="tab" data-go="${k}"${UI.view === k ? ' aria-current="page"' : ''}>${l}</button>`).join('')}<button class="tab" data-go="reservar">Ver página de reservas ↗</button>${backend === 'supabase' ? '<button class="tab" id="logout">Salir</button>' : ''}</nav></div></header>`;
+  }
+  function render() {
+    const a = $('#app'); const v = UI.view;
+    const body = { reservar: viewBook, 'mi-cita': viewMine, ingresar: viewLogin, citas: viewCitas, agenda: viewAgenda, servicios: viewServices, equipo: viewStaff, ajustes: viewSettings }[v]();
+    const note = UI.loadError ? `<div class="banner warn">No se pudo cargar la agenda (${esc(UI.loadError)}). Revisa tu conexión y recarga la página.</div>`
+      : backend === 'local' && !PUB.includes(v) ? '<div class="banner warn"><b>Modo de prueba:</b> falta conectar Supabase en <code>config.js</code>. Todo se guarda solo en este navegador y las clientas no ven estos datos.</div>' : '';
+    const demoNote = canEdit && !PUB.includes(v) && [S.services, S.staff, S.bookings].some((m) => vals(m).some((x) => x.demo)) ? '<div class="banner warn"><span class="tag-demo">DEMO</span> Hay datos de ejemplo (marcados DEMO). <button class="btn sm" id="clear-demo">Borrar ejemplo</button></div>' : '';
+    a.innerHTML = header() + `<main class="wrap">${note}${demoNote}${body.html}</main>`;
+    const cd = $('#clear-demo'); if (cd) cd.onclick = () => guard(cd, async () => { for (const c of COLLS) for (const x of vals(S[c])) if (x.demo) await del(c, x.id); toast('Datos de ejemplo borrados'); });
+    const lo = $('#logout'); if (lo) lo.onclick = () => guard(lo, async () => { await logout(); UI.want = ''; go('reservar'); toast('Sesión cerrada'); });
+    if (body.after) body.after(a);
+  }
+  listeners.push(() => {
+    const a = document.activeElement;
+    if (modalEl && modalRefresh && !(modalEl.contains(a) && /INPUT|SELECT|TEXTAREA/.test(a.tagName))) modalRefresh();
+    if (modalEl) return;
+    if (a && $('#app').contains(a) && /INPUT|SELECT|TEXTAREA/.test(a.tagName)) return;
+    render();
+  });
+
+  // ───── página pública para celular: un paso por pantalla (servicio → con quién → día y hora → tus datos) ─────
+  const STEPS = ['Servicio', 'Con quién', 'Día y hora', 'Tus datos'];
+  function stepHead(n, title, sub) {
+    return `<div class="w-head">${n > 1 ? '<button class="w-back" id="w-back" aria-label="Volver">‹</button>' : '<span></span>'}<div class="w-prog" aria-label="Paso ${n} de 4">${STEPS.map((s, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('')}</div><span class="w-n">${n}/4</span></div>
+      <h1 class="w-title">${esc(title)}</h1>${sub ? `<p class="w-sub">${sub}</p>` : ''}`;
+  }
+  const dayChip = (d, n) => { const x = new Date(d + 'T12:00:00Z'); return { dw: d === n ? 'Hoy' : d === addDays(n, 1) ? 'Mañana' : new Intl.DateTimeFormat('es-PE', { timeZone: 'UTC', weekday: 'short' }).format(x).replace('.', ''), dn: x.getUTCDate(), mo: new Intl.DateTimeFormat('es-PE', { timeZone: 'UTC', month: 'short' }).format(x).replace('.', '') }; };
+  function viewBook() {
+    const c = cfg(); const B = UI.bk; const n = nowL();
+    if (UI.done) return viewDone();
+    const svcs = services();
+    if (!svcs.length) return { html: `<div class="mwrap"><div class="w-empty"><h1 class="w-title">Pronto podrás reservar aquí</h1><p class="w-sub">${canEdit ? 'Agrega tus servicios y tu equipo en el panel, o carga un ejemplo.' : 'El salón aún está preparando su agenda.'}</p>${canEdit ? '<button class="w-cta" id="seed">Cargar ejemplo</button>' : ''}</div></div>`, after: () => { const s = $('#seed'); if (s) s.onclick = () => guard(s, seed); } };
+    if (!B.svc || !S.services[B.svc]) B.step = 1;
+    const svc = S.services[B.svc]; const team = svc ? staffFor(svc.id) : [];
+    if (B.step === 2 && team.length <= 1) B.step = 3;          // con una sola profesional no hace falta elegir
+    if (B.step >= 3 && team.length === 1) B.staff = team[0].id;
+    let html = '', bar = '', after = null;
+
+    if (B.step === 1) {
+      const cats = []; svcs.forEach((s) => { const k = s.category || 'Servicios'; if (!cats.includes(k)) cats.push(k); });
+      const cat = cats.includes(B.cat) ? B.cat : '';
+      html = `<div class="na-hero"><span class="na-tag">Reserva en línea</span><h1>Tus uñas, a tu manera</h1><p>${esc(c.address || 'Elige tu servicio y la hora que prefieras.')}</p></div>` + stepHead(1, '¿Qué te quieres hacer?', '') +
+        (cats.length > 1 ? `<div class="w-chips" role="group" aria-label="Categorías"><button class="w-chip" data-cat="" aria-pressed="${!cat}">Todos</button>${cats.map((k) => `<button class="w-chip" data-cat="${esc(k)}" aria-pressed="${cat === k}">${esc(k)}</button>`).join('')}</div>` : '') +
+        `<div class="w-list">${svcs.filter((s) => !cat || (s.category || 'Servicios') === cat).map((s) => `<button class="w-opt" data-svc="${s.id}"><span class="w-sw" style="background:${esc(s.color || 'var(--lacquer)')}"></span><span class="w-txt"><b>${esc(s.name)}</b>${demo(s)}${s.description ? `<small>${esc(s.description)}</small>` : ''}<small class="w-meta">${s.duration} min</small></span><span class="w-price">${money(s.price)}</span></button>`).join('')}</div>`;
+      after = (a) => {
+        $$('[data-cat]', a).forEach((b) => (b.onclick = () => { B.cat = b.dataset.cat; render(); }));
+        $$('[data-svc]', a).forEach((b) => (b.onclick = () => { B.svc = b.dataset.svc; B.staff = 'any'; B.date = ''; B.start = null; B.step = 2; render(); window.scrollTo(0, 0); }));
+      };
+    } else if (B.step === 2) {
+      html = stepHead(2, '¿Con quién?', esc(svc.name) + ' · ' + svc.duration + ' min') +
+        `<div class="w-list"><button class="w-opt" data-staff="any"><span class="w-ava any" aria-hidden="true">✦</span><span class="w-txt"><b>Cualquiera disponible</b><small>Más horarios para elegir</small></span><span class="w-go" aria-hidden="true">›</span></button>
+        ${team.map((p) => `<button class="w-opt" data-staff="${p.id}"><span class="w-ava" aria-hidden="true">${esc(p.name.trim()[0] || '?')}</span><span class="w-txt"><b>${esc(p.name)}</b>${demo(p)}</span><span class="w-go" aria-hidden="true">›</span></button>`).join('')}</div>`;
+      after = (a) => $$('[data-staff]', a).forEach((b) => (b.onclick = () => { B.staff = b.dataset.staff; B.date = ''; B.start = null; B.step = 3; render(); window.scrollTo(0, 0); }));
+    } else if (B.step === 3) {
+      const slotsOn = (d) => (B.staff === 'any' ? Object.keys(slotsAny(svc, d)).map(Number).sort((x, y) => x - y) : slotsFor(svc, B.staff, d));
+      const span = Math.min(Number(c.maxDays), B.more ? 60 : 14);
+      const days = []; for (let i = 0; i <= span; i++) { const d = addDays(n.date, i); days.push([d, slotsOn(d).length]); }
+      if (!B.date || !days.some(([d, k]) => d === B.date && k)) { const f = days.find(([, k]) => k); B.date = f ? f[0] : ''; B.start = null; }
+      const sl = B.date ? slotsOn(B.date) : [];
+      const groups = [['Mañana', (t) => t < 720], ['Tarde', (t) => t >= 720 && t < 1080], ['Noche', (t) => t >= 1080]].map(([l, f]) => [l, sl.filter(f)]).filter(([, x]) => x.length);
+      const who = B.staff === 'any' ? 'cualquier profesional' : (S.staff[B.staff] || {}).name;
+      html = stepHead(3, 'Elige día y hora', esc(svc.name) + ' · con ' + esc(who)) +
+        `<div class="w-days" id="w-days" role="group" aria-label="Días">${days.map(([d, k]) => { const x = dayChip(d, n.date); return `<button class="w-day" data-day="${d}" aria-pressed="${B.date === d}"${k ? '' : ' disabled'} aria-label="${esc(fmtD(d))}${k ? '' : ', sin horarios'}"><small>${esc(x.dw)}</small><b>${x.dn}</b><small>${esc(x.mo)}</small></button>`; }).join('')}${!B.more && Number(c.maxDays) > 14 ? '<button class="w-day more" id="w-more">Más<br>fechas</button>' : ''}</div>` +
+        (B.date ? `<p class="w-date">${esc(fmtD(B.date))}</p>${groups.map(([l, x]) => `<h3 class="w-gl">${l}</h3><div class="w-times">${x.map((t) => `<button class="w-time" data-t="${t}" aria-pressed="${B.start === t}">${hm(t)}</button>`).join('')}</div>`).join('')}` : '<div class="w-empty"><p class="w-sub">No hay horarios libres en estas fechas.</p></div>');
+      bar = B.start != null ? `<button class="w-cta" id="w-next">Continuar · ${hm(B.start)}</button>` : '<button class="w-cta" disabled>Elige una hora</button>';
+      after = (a) => {
+        $$('[data-day]', a).forEach((b) => (b.onclick = () => { B.date = b.dataset.day; B.start = null; B.scrollX = $('#w-days').scrollLeft; render(); }));
+        const dz = $('#w-days'); if (dz && B.scrollX) dz.scrollLeft = B.scrollX; const sel = $('.w-day[aria-pressed="true"]', a); if (sel && !B.scrollX) sel.scrollIntoView({ inline: 'center', block: 'nearest' });
+        const more = $('#w-more'); if (more) more.onclick = () => { B.more = true; render(); };
+        $$('[data-t]', a).forEach((b) => (b.onclick = () => { B.start = Number(b.dataset.t); render(); }));
+        const nx = $('#w-next'); if (nx) nx.onclick = () => { B.step = 4; B.scrollX = 0; render(); window.scrollTo(0, 0); };
+      };
+    } else {
+      const who = B.staff === 'any' ? 'La primera profesional disponible' : (S.staff[B.staff] || {}).name;
+      const F = B.form || {};
+      html = stepHead(4, 'Tus datos', 'Solo tu nombre y celular para confirmar.') +
+        `<div class="w-sum"><div><b>${esc(svc.name)}</b><span>${esc(fmtD(B.date))} · ${hm(B.start)} – ${hm(B.start + Number(svc.duration))}</span><span>${esc(who)}</span></div><b class="w-price">${money(svc.price)}</b></div>
+        <form id="bk-form" class="w-form" novalidate>
+          <label class="w-f" for="cl-n"><span>Nombre</span><input type="text" id="cl-n" autocomplete="name" autocapitalize="words" enterkeyhint="next" value="${esc(F.name || '')}" required></label>
+          <label class="w-f" for="cl-p"><span>Celular</span><input type="tel" id="cl-p" autocomplete="tel-national" inputmode="numeric" placeholder="9XX XXX XXX" enterkeyhint="done" value="${esc(F.phone || '')}" required></label>
+          <details class="w-more"${F.note || F.email ? ' open' : ''}><summary>Agregar nota o correo (opcional)</summary>
+            <label class="w-f" for="cl-x"><span>Nota (diseño, largo, alergias)</span><textarea id="cl-x" rows="2">${esc(F.note || '')}</textarea></label>
+            <label class="w-f" for="cl-e"><span>Correo</span><input type="email" id="cl-e" autocomplete="email" value="${esc(F.email || '')}"></label></details>
+          <p class="w-pol">${esc(c.policy)}${Number(c.depositPct) > 0 ? ` Adelanto: ${money(svc.price * c.depositPct / 100)} (${esc(c.payMethods)}).` : ''}</p>
+          <p class="err" id="bk-err" role="alert"></p></form>`;
+      bar = '<button class="w-cta" id="w-ok">Confirmar cita</button>';
+      after = () => {
+        const keep = () => { B.form = { name: $('#cl-n').value, phone: $('#cl-p').value, note: $('#cl-x').value, email: $('#cl-e').value }; };
+        $('#bk-form').addEventListener('input', keep);
+        const submit = () => { keep(); const btn = $('#w-ok'); $('#bk-err').textContent = '';
+          guard(btn, async () => { const b = await createBooking({ svcId: svc.id, staffId: B.staff, anyStaff: B.staff === 'any', date: B.date, start: B.start, client: B.form, source: 'publico' }); UI.done = b.id; UI.doneB = b; B.form = {}; render(); window.scrollTo(0, 0); })
+            .catch((er) => { $('#bk-err').textContent = er.message; if (/horario/.test(er.message)) { B.start = null; setTimeout(() => { B.step = 3; render(); toast(er.message, true); }, 1200); } }); };
+        $('#bk-form').addEventListener('submit', (e) => { e.preventDefault(); submit(); });
+        $('#w-ok').onclick = submit;
+      };
+    }
+    return { html: `<div class="mwrap">${html}</div>${bar ? `<div class="w-bar">${bar}</div>` : ''}`,
+      after: (a) => { const bk = $('#w-back'); if (bk) bk.onclick = () => { B.step = B.step === 3 && team.length <= 1 ? 1 : B.step - 1; B.start = B.step < 4 ? B.start : B.start; render(); window.scrollTo(0, 0); }; if (after) after(a); } };
+  }
+  function viewDone() {
+    const c = cfg(); const b = S.bookings[UI.done] || (UI.doneB && UI.doneB.id === UI.done ? UI.doneB : {}); const p = S.staff[b.staffId] || {};
+    if (!b.id || !b.date) { UI.done = null; UI.bk = { svc: '', staff: 'any', date: '', start: null, step: 1 }; return viewBook(); }
+    const gcal = 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent(b.serviceName + ' · ' + c.name) + '&dates=' + gDates(b) + '&details=' + encodeURIComponent('Código ' + b.code + (c.address ? ' · ' + c.address : '')) + (c.address ? '&location=' + encodeURIComponent(c.address) : '');
+    const wa = c.phone ? 'https://wa.me/51' + normPhone(c.phone) + '?text=' + encodeURIComponent(`Hola, reservé ${b.serviceName} para el ${fmtD(b.date)} a las ${hm(b.start)} (código ${b.code}).`) : '';
+    return { html: `<div class="mwrap"><div class="w-done"><div class="check" aria-hidden="true">✓</div><h1 class="w-title">¡Listo, te esperamos!</h1><p class="w-sub">Guarda tu código: lo necesitas para cambiar o cancelar.</p>
+      <div class="w-code">${esc(b.code)}</div>
+      <div class="w-sum"><div><b>${esc(b.serviceName)}</b><span>${esc(fmtD(b.date))} · ${hm(b.start)} – ${hm(b.end)}</span><span>Con ${esc(p.name || b.staffName)}</span>${c.address ? `<span>📍 ${esc(c.address)}</span>` : ''}</div><b class="w-price">${money(b.price)}</b></div>
+      ${Number(c.depositPct) > 0 ? `<p class="w-pol">Para asegurar tu cita paga un adelanto de <b>${money(b.price * c.depositPct / 100)}</b> (${esc(c.payMethods)}).</p>` : ''}
+      <div class="w-acts">${wa ? `<a class="w-btn" href="${esc(wa)}" target="_blank" rel="noopener">💬 Avisar al salón por WhatsApp</a>` : ''}<a class="w-btn" href="${esc(gcal)}" target="_blank" rel="noopener">📅 Guardar en mi calendario</a><button class="w-btn" id="new-bk">Reservar otra cita</button></div>
+      <p class="w-pol">El salón no envía mensajes automáticos; el aviso por WhatsApp lo mandas tú.</p></div></div>`,
+      after: () => { $('#new-bk').onclick = () => { UI.done = null; UI.bk = { svc: '', staff: 'any', date: '', start: null, step: 1 }; render(); window.scrollTo(0, 0); }; } };
+  }
+  function gDates(b) { const f = (m) => new Date(epoch(b.date, m)).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, ''); return f(b.start) + '/' + f(b.end); }
+
+  // ───── ingreso del salón (Supabase Auth; solo cuentas de la tabla admins) ─────
+  function viewLogin() {
+    return { html: `<div class="card" style="max-width:420px;width:100%;margin:24px auto 0"><h2>Panel del salón</h2><p class="small muted">Ingresa con la cuenta de ${esc(cfg().name)}. Las clientas no necesitan cuenta: reservan desde la página principal.</p>
+      <form id="lg" novalidate style="display:flex;flex-direction:column;gap:12px;margin-top:10px"><label class="f" for="lg-e"><span>Correo</span><input type="email" id="lg-e" autocomplete="username" required></label>
+      <label class="f" for="lg-p"><span>Contraseña</span><input type="password" id="lg-p" autocomplete="current-password" required></label><p class="err" id="lg-x" role="alert"></p><button class="btn primary" type="submit" id="lg-ok">Ingresar</button></form></div>`,
+      after: () => { $('#lg').addEventListener('submit', (e) => { e.preventDefault(); const btn = $('#lg-ok'); $('#lg-x').textContent = '';
+        guard(btn, async () => { await login($('#lg-e').value.trim(), $('#lg-p').value); go(UI.want || 'citas'); }).catch((er) => ($('#lg-x').textContent = er.message)); }); } };
+  }
+
+  // ───── la clienta gestiona su cita con código + celular ─────
+  function viewMine() {
+    // El resultado se guarda en UI.mine para que sobreviva a los repintados por sincronización.
+    const M = UI.mine || {};
+    const mine = backend === 'supabase' ? (M.res ? [M.res] : []) : M.code ? vals(S.bookings).filter((x) => x.code === M.code && x.client.phone === M.phone).sort((x, y) => (y.createdAt || '').localeCompare(x.createdAt || '')) : [];
+    const b = mine.find((x) => x.status !== 'cancelada') || mine[0] || null;
+    let out = '';
+    if (M.msg) out = `<div class="banner ok">${esc(M.msg)}</div>`;
+    else if (M.code && !b) out = '<p class="err">No encontramos una cita con ese código y celular.</p>';
+    if (b) {
+      const canChange = b.status === 'confirmada' && epoch(b.date, b.start) - Date.now() > 3 * 3600000;
+      out += `<div class="list"${M.msg ? ' style="margin-top:10px"' : ''}><div class="li"><span>${esc(b.serviceName)} · ${esc(b.staffName)}</span>${statusPill(b.status)}</div><div class="li"><span>${esc(fmtD(b.date))}</span><b>${hm(b.start)} – ${hm(b.end)}</b></div></div>
+        ${canChange ? '<div class="row" style="margin-top:10px"><button class="btn" id="m-r">Reprogramar</button><button class="btn danger" id="m-x">Cancelar cita</button></div>' : b.status === 'confirmada' ? '<p class="small muted">Faltan menos de 3 horas: para cambios comunícate con el salón.</p>' : ''}`;
+    }
+    return { html: `<div class="card" style="max-width:520px;width:100%;margin:0 auto"><h2>Mi cita</h2><p class="small muted">Escribe el código que recibiste al reservar y tu celular.</p><form id="mine" class="fgrid" novalidate><label class="f" for="m-c"><span>Código</span><input type="text" id="m-c" placeholder="C-XXXXXX" autocapitalize="characters" value="${esc(M.code || '')}"></label><label class="f" for="m-p"><span>Celular</span><input type="tel" id="m-p" inputmode="numeric" value="${esc(M.phone || '')}"></label><button class="btn primary" type="submit" style="align-self:end">Buscar</button></form><div id="m-out" style="margin-top:12px">${out}</div></div>`,
+      after: () => {
+        $('#mine').addEventListener('submit', (e) => { e.preventDefault(); const sb2 = $('#mine button[type=submit]'); UI.mine = { code: $('#m-c').value.trim().toUpperCase(), phone: normPhone($('#m-p').value) };
+          if (backend !== 'supabase') return render();
+          guard(sb2, async () => { UI.mine.res = await rpc('my_booking', { p_code: UI.mine.code, p_phone: UI.mine.phone }); render(); }).catch((er) => { toast(er.message, true); }); });
+        const mx = $('#m-x'); if (mx) mx.onclick = () => guard(mx, async () => {
+          if (backend === 'supabase') { await rpc('cancel_my_booking', { p_code: M.code, p_phone: M.phone }); UI.mine.res = await rpc('my_booking', { p_code: M.code, p_phone: M.phone }); UI.mine.msg = 'Tu cita fue cancelada. El horario quedó libre.'; loadAll().catch(() => {}); render(); return; }
+          UI.mine.msg = 'Tu cita fue cancelada. El horario quedó libre.'; await put('bookings', Object.assign({}, b, { status: 'cancelada', cancelReason: 'Cancelada por la clienta', history: (b.history || []).concat({ at: new Date().toISOString(), what: 'Cancelada', by: 'Clienta' }) })); }).catch((er) => toast(er.message, true));
+        const mr = $('#m-r'); if (mr) mr.onclick = () => reschedule(b, 'publico', M.phone);
+      } };
+  }
+  function reschedule(b, source, phone) {
+    const svc = S.services[b.serviceId]; if (!svc) { toast('El servicio ya no existe.', true); return; }
+    let date = b.date, start = null;
+    // En la página pública solo hay bloques ocupados sin id: se ignora el bloque de esta misma cita.
+    const own = () => (backend === 'supabase' && !canEdit ? (vals(S.bookings).find((x) => x.staffId === b.staffId && x.date === b.date && x.blockStart === b.blockStart && x.blockEnd === b.blockEnd) || {}).id : b.id);
+    const draw = (m) => { const sl = slotsFor(svc, b.staffId, date, own()); $('#rs-s', m).innerHTML = sl.map((t) => `<button class="slot" data-t="${t}" aria-pressed="${t === start}">${hm(t)}</button>`).join('') || '<p class="muted small">Sin horarios libres ese día.</p>'; };
+    modal('Reprogramar ' + b.code, `<p class="small muted">${esc(b.serviceName)} con ${esc(b.staffName)} · ${svc.duration} min</p><label class="f" for="rs-d"><span>Nueva fecha</span><input type="date" id="rs-d" value="${date}" min="${nowL().date}"></label><div class="slots" id="rs-s" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr))"></div>`,
+      '<span class="err grow" id="rs-e"></span><button class="btn" data-x2>Volver</button><button class="btn primary" id="rs-ok">Guardar cambio</button>',
+      (m) => { draw(m); $('#rs-d', m).onchange = (e) => { date = e.target.value; start = null; draw(m); }; $('#rs-s', m).addEventListener('click', (e) => { const t = e.target.closest('[data-t]'); if (t) { start = Number(t.dataset.t); draw(m); } }); $('[data-x2]', m).onclick = closeModal;
+        $('#rs-ok', m).onclick = (e) => guard(e.currentTarget, async () => { if (start == null) throw new Error('Elige la nueva hora.'); const r = await moveBooking(b, date, start, source, phone); closeModal(); toast('Cita reprogramada al ' + fmtD(date) + ' ' + hm(start)); if (UI.view === 'mi-cita') { if (backend === 'supabase') UI.mine.res = r; UI.mine.msg = 'Tu cita fue reprogramada al ' + fmtD(date) + ' a las ' + hm(start) + '.'; render(); } }).catch((er) => ($('#rs-e', m).textContent = er.message)); });
+  }
+
+  // ───── panel: citas ─────
+  function viewCitas() {
+    const n = nowL(); const all = vals(S.bookings).sort((a, b) => (a.date + hm(a.start)).localeCompare(b.date + hm(b.start)));
+    const f = UI.filter; const q = (UI.q || '').toLowerCase();
+    const rows = all.filter((b) => (f === 'proximas' ? b.status === 'confirmada' && epoch(b.date, b.end) >= n.ts : f === 'hoy' ? b.date === n.date && b.status !== 'cancelada' : f === 'pasadas' ? b.status !== 'cancelada' && epoch(b.date, b.end) < n.ts : b.status === 'cancelada') && (!q || (b.client.name + ' ' + b.client.phone + ' ' + b.code).toLowerCase().includes(q)));
+    if (f === 'pasadas' || f === 'canceladas') rows.reverse();
+    const today = all.filter((b) => b.date === n.date && b.status !== 'cancelada');
+    const monthDone = all.filter((b) => b.date.slice(0, 7) === n.date.slice(0, 7) && b.status === 'completada');
+    const k = (l, v) => `<div class="kpi"><span>${l}</span><b>${v}</b></div>`;
+    return { html: `<div class="row"><h1 class="grow">Citas</h1><button class="btn primary" id="new-b">+ Nueva cita</button><button class="btn" id="share">Compartir enlace de reservas</button></div>
+      <div class="kpis">${k('Citas hoy', today.length)}${k('Próximas', all.filter((b) => b.status === 'confirmada' && epoch(b.date, b.end) >= n.ts).length)}${k('Atendidas este mes', monthDone.length)}${k('Ingresos del mes (atendidas)', money(monthDone.reduce((a, b) => a + b.price, 0)))}</div>
+      <div class="row"><div class="seg" role="group" aria-label="Filtro">${[['proximas', 'Próximas'], ['hoy', 'Hoy'], ['pasadas', 'Pasadas'], ['canceladas', 'Canceladas']].map(([x, l]) => `<button data-f="${x}" aria-pressed="${f === x}">${l}</button>`).join('')}</div><input type="search" id="q" placeholder="Buscar clienta, celular o código" value="${esc(UI.q || '')}" style="max-width:280px"></div>
+      ${rows.length ? `<div class="tbl"><table><thead><tr><th>Fecha</th><th>Hora</th><th>Clienta</th><th>Servicio</th><th>Profesional</th><th>Estado</th><th class="n">Precio</th><th></th></tr></thead><tbody>${rows.map((b) => `<tr><td>${esc(fmtD(b.date, { weekday: 'short', month: 'short' }))}</td><td class="n">${hm(b.start)}–${hm(b.end)}</td><td><b>${esc(b.client.name)}</b>${demo(b)}<br><span class="small muted">${esc(b.client.phone)}${b.client.note ? ' · ' + esc(b.client.note) : ''}</span></td><td>${esc(b.serviceName)}</td><td>${esc(b.staffName)}</td><td>${statusPill(b.status)}</td><td class="n">${money(b.price)}</td><td><button class="btn sm" data-open="${b.id}">Abrir</button></td></tr>`).join('')}</tbody></table></div>` : `<div class="card" style="text-align:center"><p class="muted">No hay citas en este filtro.</p>${vals(S.services).length ? '' : '<button class="btn" id="seed2">Cargar ejemplo</button>'}</div>`}`,
+      after: (a) => {
+        $$('[data-f]', a).forEach((b) => (b.onclick = () => { UI.filter = b.dataset.f; render(); }));
+        const qi = $('#q'); let t; qi.oninput = () => { clearTimeout(t); t = setTimeout(() => { UI.q = qi.value; render(); const n2 = $('#q'); n2.focus(); n2.setSelectionRange(n2.value.length, n2.value.length); }, 300); };
+        $$('[data-open]', a).forEach((b) => (b.onclick = () => openBooking(b.dataset.open)));
+        $('#new-b').onclick = () => { UI.bk = { svc: '', staff: 'any', month: '', date: '', start: null }; UI.done = null; go('reservar'); toast('Reserva en nombre de la clienta desde la página de reservas.'); };
+        $('#share').onclick = shareLink; const s2 = $('#seed2'); if (s2) s2.onclick = () => guard(s2, seed);
+      } };
+  }
+  function openBooking(id) {
+    const build = () => { const b = S.bookings[id]; if (!b) return '<p>Cita no encontrada.</p>'; const wa = 'https://wa.me/51' + b.client.phone + '?text=' + encodeURIComponent(`Hola ${b.client.name.split(' ')[0]}, te recordamos tu cita de ${b.serviceName} el ${fmtD(b.date)} a las ${hm(b.start)} en ${cfg().name}. Código ${b.code}.`);
+      return `<div class="row">${statusPill(b.status)}<span class="small muted">Código ${esc(b.code)} · reservada ${b.source === 'panel' ? 'por el salón' : 'en línea'}</span></div>
+        <div class="list"><div class="li"><span>Clienta</span><b>${esc(b.client.name)} · ${esc(b.client.phone)}</b></div>${b.client.email ? `<div class="li"><span>Correo</span><span>${esc(b.client.email)}</span></div>` : ''}<div class="li"><span>Servicio</span><b>${esc(b.serviceName)} · ${money(b.price)}</b></div><div class="li"><span>Cuándo</span><b>${esc(fmtD(b.date))} ${hm(b.start)}–${hm(b.end)}</b></div><div class="li"><span>Con</span><b>${esc(b.staffName)}</b></div>${b.client.note ? `<div class="li"><span>Notas</span><span>${esc(b.client.note)}</span></div>` : ''}${b.cancelReason ? `<div class="li"><span>Motivo</span><span>${esc(b.cancelReason)}</span></div>` : ''}</div>
+        <div class="row"><a class="btn sm" href="${esc(wa)}" target="_blank" rel="noopener">Recordatorio por WhatsApp</a><span class="small muted">Se abre WhatsApp con el mensaje listo; lo envías tú.</span></div>
+        <div class="small muted">${(b.history || []).map((h) => `${esc(h.what)} · ${esc(h.by)} · ${new Date(h.at).toLocaleString('es-PE', { timeZone: 'America/Lima' })}`).join('<br>')}</div>`; };
+    const b = S.bookings[id]; const open = b && b.status === 'confirmada';
+    modal('Cita de ' + (b ? b.client.name : ''), `<div id="bd">${build()}</div>`, open ? '<button class="btn" id="b-r">Reprogramar</button><button class="btn" id="b-no">No asistió</button><button class="btn danger" id="b-x">Cancelar</button><button class="btn primary" id="b-ok">Marcar atendida</button>' : '',
+      (m) => { if (!open) return; const set = (st, extra) => async () => { const cur = S.bookings[id]; await put('bookings', Object.assign({}, cur, { status: st }, extra || {}, { history: (cur.history || []).concat({ at: new Date().toISOString(), what: { completada: 'Atendida', ausente: 'No asistió', cancelada: 'Cancelada' }[st], by: 'Salón' }) })); closeModal(); toast('Cita actualizada'); };
+        $('#b-ok', m).onclick = (e) => guard(e.currentTarget, set('completada')); $('#b-no', m).onclick = (e) => guard(e.currentTarget, set('ausente')); $('#b-x', m).onclick = (e) => guard(e.currentTarget, set('cancelada', { cancelReason: 'Cancelada por el salón' })); $('#b-r', m).onclick = () => reschedule(S.bookings[id], 'panel'); },
+      () => { const el = $('#bd'); if (el) el.innerHTML = build(); });
+  }
+  function shareLink() {
+    const url = location.origin + location.pathname + '#reservar';
+    const wa = 'https://wa.me/?text=' + encodeURIComponent('Reserva tu cita en ' + cfg().name + ': ' + url);
+    modal('Compartir enlace de reservas', `<p>Tus clientas reservan desde este enlace, sin crear cuenta:</p><div class="w-code" style="font-size:1rem;letter-spacing:0;word-break:break-all">${esc(url)}</div>
+      <div class="row" style="margin-top:10px"><button class="btn primary" id="sh-c">Copiar enlace</button><a class="btn" href="${esc(wa)}" target="_blank" rel="noopener">Enviar por WhatsApp</a></div>
+      <p class="small muted">Ponlo en la bio de Instagram y TikTok, en tu perfil de Google y en el estado de WhatsApp.</p>`, '', (m) => {
+      $('#sh-c', m).onclick = async () => { try { await navigator.clipboard.writeText(url); toast('Enlace copiado'); } catch (e) { toast('Mantén presionado el enlace para copiarlo', true); } }; });
+  }
+
+  // ───── panel: agenda del día por profesional ─────
+  function viewAgenda() {
+    const n = nowL(); const d = UI.adminDate || n.date; const team = vals(S.staff).filter((p) => p.active !== false);
+    if (!team.length) return { html: '<div class="card"><p>Agrega tu equipo para ver la agenda.</p><button class="btn primary" data-go="equipo">Agregar profesional</button></div>' };
+    const wins = team.flatMap((p) => (p.schedule || {})[dow(d)] || []); const m0 = Math.floor(Math.min(480, ...wins.map((w) => w[0])) / 60) * 60; const m1 = Math.ceil(Math.max(1200, ...wins.map((w) => w[1])) / 60) * 60;
+    const RH = 22; const rows = (m1 - m0) / 30; const times = []; for (let m = m0; m < m1; m += 30) times.push(`<div>${m % 60 ? '' : hm(m)}</div>`);
+    const col = (p) => { const w = (p.schedule || {})[dow(d)] || []; let h = ''; let cur = m0; w.slice().sort((a, b) => a[0] - b[0]).forEach(([s, e]) => { if (s > cur) h += `<div class="ag-off" style="top:${(cur - m0) / 30 * RH}px;height:${(s - cur) / 30 * RH}px"></div>`; cur = Math.max(cur, e); }); if (cur < m1) h += `<div class="ag-off" style="top:${(cur - m0) / 30 * RH}px;height:${(m1 - cur) / 30 * RH}px"></div>`;
+      vals(S.timeoff).filter((o) => o.staffId === p.id && o.date === d).forEach((o) => (h += `<div class="ag-off" style="top:${(o.start - m0) / 30 * RH}px;height:${(o.end - o.start) / 30 * RH}px" title="${esc(o.reason)}"></div>`));
+      vals(S.bookings).filter((b) => b.staffId === p.id && b.date === d && b.status !== 'cancelada').forEach((b) => { const sv = S.services[b.serviceId] || {}; h += `<button class="ag-b" data-open="${b.id}" style="top:${(b.start - m0) / 30 * RH}px;height:${(b.end - b.start) / 30 * RH - 2}px;background:${esc(sv.color || '#9b4f78')}${b.status !== 'confirmada' ? ';opacity:.55' : ''}"><b>${esc(b.client.name)}</b>${hm(b.start)} · ${esc(b.serviceName)}</button>`; });
+      return `<div class="ag-c" style="height:${rows * RH}px">${h}</div>`; };
+    return { html: `<div class="row"><h1 class="grow">Agenda</h1><button class="btn sm" id="dp" aria-label="Día anterior">‹</button><input type="date" id="dd" value="${d}" style="width:auto" aria-label="Fecha"><button class="btn sm" id="dn" aria-label="Día siguiente">›</button><button class="btn sm" id="dt">Hoy</button></div><p class="muted" style="text-transform:capitalize;margin:0">${esc(fmtD(d))}</p>
+      <div class="agenda" style="--rh:${RH}px;grid-template-columns:48px repeat(${team.length},minmax(140px,1fr))"><div class="ag-h"></div>${team.map((p) => `<div class="ag-h">${esc(p.name)}</div>`).join('')}<div class="ag-t">${times.join('')}</div>${team.map(col).join('')}</div>
+      <p class="small muted">Las franjas rayadas están fuera de horario o con ausencia registrada.</p>`,
+      after: (a) => { const sd = (x) => { UI.adminDate = x; render(); }; $('#dd').onchange = (e) => sd(e.target.value || n.date); $('#dp').onclick = () => sd(addDays(d, -1)); $('#dn').onclick = () => sd(addDays(d, 1)); $('#dt').onclick = () => sd(n.date); $$('[data-open]', a).forEach((b) => (b.onclick = () => openBooking(b.dataset.open))); } };
+  }
+
+  // ───── panel: servicios ─────
+  function viewServices() {
+    const list = services(true);
+    return { html: `<div class="row"><h1 class="grow">Servicios</h1><button class="btn primary" id="add-s">+ Servicio</button>${list.length ? '' : '<button class="btn" id="seed3">Cargar ejemplo</button>'}</div>
+      <p class="small muted">Cada servicio define su duración, precio y tiempo de preparación o limpieza (antes y después), que también bloquea la agenda.</p>
+      <div class="grid g3">${list.map((s) => `<div class="card"><div class="row"><span style="width:12px;height:12px;border-radius:50%;background:${esc(s.color || '#b3124e')}"></span><h3 class="grow">${esc(s.name)}${demo(s)}</h3>${s.active === false ? '<span class="pill">Oculto</span>' : ''}</div><p class="small muted">${esc(s.category || '')} · ${s.duration} min · ${money(s.price)}${(s.bufferBefore || s.bufferAfter) ? ` · preparación ${s.bufferBefore || 0}/${s.bufferAfter || 0} min` : ''}</p><p class="small">${esc(s.description || '')}</p><p class="small muted">Profesionales: ${esc(staffFor(s.id).map((p) => p.name).join(', ') || 'ninguna')}</p><button class="btn sm" data-edit="${s.id}">Editar</button></div>`).join('') || '<p class="muted">Aún no hay servicios.</p>'}</div>`,
+      after: (a) => { $('#add-s').onclick = () => editService(); $$('[data-edit]', a).forEach((b) => (b.onclick = () => editService(b.dataset.edit))); const s3 = $('#seed3'); if (s3) s3.onclick = () => guard(s3, seed); } };
+  }
+  function editService(id) {
+    const s = (id && S.services[id]) || { name: '', category: 'Manos', duration: 60, price: 40, bufferBefore: 0, bufferAfter: 10, color: '#f6c9d9', active: true, description: '' };
+    modal(id ? 'Editar servicio' : 'Nuevo servicio', `<div class="fgrid"><label class="f" for="s-n"><span>Nombre</span><input type="text" id="s-n" value="${esc(s.name)}"></label><label class="f" for="s-c"><span>Categoría</span><input type="text" id="s-c" value="${esc(s.category || '')}" list="cats"><datalist id="cats"><option value="Manos"><option value="Pies"><option value="Uñas esculpidas"><option value="Diseño y arte"><option value="Retiro"></datalist></label>
+      <label class="f" for="s-d"><span>Duración (min)</span><input type="number" id="s-d" min="10" step="5" value="${s.duration}"></label><label class="f" for="s-p"><span>Precio (S/)</span><input type="number" id="s-p" min="0" step="0.5" value="${s.price}"></label>
+      <label class="f" for="s-bb"><span>Preparación antes (min)</span><input type="number" id="s-bb" min="0" step="5" value="${s.bufferBefore || 0}"></label><label class="f" for="s-ba"><span>Limpieza después (min)</span><input type="number" id="s-ba" min="0" step="5" value="${s.bufferAfter || 0}"></label><label class="f" for="s-col"><span>Color</span><input type="color" id="s-col" value="${esc(s.color || '#f6c9d9')}" style="height:38px;width:100%"></label></div>
+      <label class="f" for="s-desc"><span>Descripción</span><textarea id="s-desc">${esc(s.description || '')}</textarea></label><label class="chk"><input type="checkbox" id="s-a"${s.active === false ? '' : ' checked'}> Visible en la página de reservas</label>`,
+      `<span class="err grow" id="s-e"></span>${id ? '<button class="btn danger" id="s-del">Eliminar</button>' : ''}<button class="btn primary" id="s-ok">Guardar</button>`,
+      (m) => { $('#s-ok', m).onclick = (e) => guard(e.currentTarget, async () => { const name = $('#s-n', m).value.trim(); const dur = Number($('#s-d', m).value); if (!name) throw new Error('Escribe el nombre.'); if (!(dur >= 10)) throw new Error('La duración mínima es 10 minutos.');
+          await put('services', Object.assign({}, s, { id: s.id || uid('s'), name, category: $('#s-c', m).value.trim(), duration: dur, price: Number($('#s-p', m).value) || 0, bufferBefore: Number($('#s-bb', m).value) || 0, bufferAfter: Number($('#s-ba', m).value) || 0, color: $('#s-col', m).value, description: $('#s-desc', m).value.trim(), active: $('#s-a', m).checked, demo: false })); closeModal(); toast('Servicio guardado'); }).catch((er) => ($('#s-e', m).textContent = er.message));
+        const dl = $('#s-del', m); if (dl) dl.onclick = (e) => guard(e.currentTarget, async () => { await del('services', s.id); closeModal(); toast('Servicio eliminado (las citas ya hechas se conservan)'); }); });
+  }
+
+  // ───── panel: equipo, horarios y ausencias ─────
+  function viewStaff() {
+    const team = vals(S.staff);
+    const off = vals(S.timeoff).filter((o) => o.date >= nowL().date).sort((a, b) => (a.date + a.start).localeCompare(b.date + b.start));
+    return { html: `<div class="row"><h1 class="grow">Equipo y horarios</h1><button class="btn primary" id="add-p">+ Profesional</button></div>
+      <div class="grid g2">${team.map((p) => `<div class="card"><div class="row"><h3 class="grow">${esc(p.name)}${demo(p)}</h3>${p.active === false ? '<span class="pill">Inactiva</span>' : ''}</div><p class="small muted">${esc((p.services || []).map((id) => (S.services[id] || {}).name).filter(Boolean).join(', ') || 'Sin servicios')}</p>
+        <div class="small">${[1, 2, 3, 4, 5, 6, 0].map((d) => `<div><b style="display:inline-block;width:34px">${DOWS[d]}</b> ${((p.schedule || {})[d] || []).map(([s, e]) => hm(s) + '–' + hm(e)).join(', ') || '<span class="muted">Descanso</span>'}</div>`).join('')}</div>
+        <div class="row" style="margin-top:8px"><button class="btn sm" data-edit="${p.id}">Editar</button><button class="btn sm" data-off="${p.id}">Registrar ausencia</button></div></div>`).join('') || '<p class="muted">Aún no hay profesionales.</p>'}</div>
+      <h2>Ausencias próximas</h2>${off.length ? `<div class="list">${off.map((o) => `<div class="li"><span>${esc((S.staff[o.staffId] || {}).name || '')} · ${esc(fmtD(o.date))} · ${hm(o.start)}–${hm(o.end)} · ${esc(o.reason)}</span><button class="btn sm danger" data-deloff="${o.id}">Quitar</button></div>`).join('')}</div>` : '<p class="muted small">No hay ausencias registradas.</p>'}`,
+      after: (a) => { $('#add-p').onclick = () => editStaff(); $$('[data-edit]', a).forEach((b) => (b.onclick = () => editStaff(b.dataset.edit))); $$('[data-off]', a).forEach((b) => (b.onclick = () => addOff(b.dataset.off))); $$('[data-deloff]', a).forEach((b) => (b.onclick = () => guard(b, () => del('timeoff', b.dataset.deloff)))); } };
+  }
+  function editStaff(id) {
+    const p = (id && S.staff[id]) || { name: '', services: services(true).map((s) => s.id), schedule: { 1: [[540, 1140]], 2: [[540, 1140]], 3: [[540, 1140]], 4: [[540, 1140]], 5: [[540, 1140]], 6: [[540, 900]] }, active: true };
+    const rowFor = (d) => { const w = (p.schedule || {})[d] || []; const a = w[0] || [540, 1140]; const b = w[1]; return `<div class="row"><label class="chk" style="width:70px"><input type="checkbox" class="sd" data-d="${d}"${w.length ? ' checked' : ''}> ${DOWS[d]}</label><input type="time" class="s1" data-d="${d}" value="${hm(a[0])}" style="width:auto" aria-label="Inicio ${DOWS[d]}"> – <input type="time" class="e1" data-d="${d}" value="${hm(a[1])}" style="width:auto" aria-label="Fin ${DOWS[d]}"><span class="small muted">y</span><input type="time" class="s2" data-d="${d}" value="${b ? hm(b[0]) : ''}" style="width:auto" aria-label="Segundo turno inicio"> – <input type="time" class="e2" data-d="${d}" value="${b ? hm(b[1]) : ''}" style="width:auto" aria-label="Segundo turno fin"></div>`; };
+    modal(id ? 'Editar profesional' : 'Nueva profesional', `<label class="f" for="p-n"><span>Nombre</span><input type="text" id="p-n" value="${esc(p.name)}"></label>
+      <div><b class="small">Servicios que realiza</b><div class="row" style="margin-top:6px">${services(true).map((s) => `<label class="chk"><input type="checkbox" class="ps" value="${s.id}"${(p.services || []).includes(s.id) ? ' checked' : ''}> ${esc(s.name)}</label>`).join('') || '<span class="small muted">Primero crea servicios.</span>'}</div></div>
+      <div><b class="small">Horario semanal</b> <span class="small muted">(segundo turno opcional, por ejemplo después del almuerzo)</span><div class="list" style="margin-top:6px">${[1, 2, 3, 4, 5, 6, 0].map(rowFor).join('')}</div></div><label class="chk"><input type="checkbox" id="p-a"${p.active === false ? '' : ' checked'}> Activa (recibe reservas)</label>`,
+      `<span class="err grow" id="p-e"></span><button class="btn primary" id="p-ok">Guardar</button>`,
+      (m) => { $('#p-ok', m).onclick = (e) => guard(e.currentTarget, async () => { const name = $('#p-n', m).value.trim(); if (!name) throw new Error('Escribe el nombre.'); const sch = {};
+          for (const d of [0, 1, 2, 3, 4, 5, 6]) { if (!$(`.sd[data-d="${d}"]`, m).checked) continue; const s1 = pHM($(`.s1[data-d="${d}"]`, m).value), e1 = pHM($(`.e1[data-d="${d}"]`, m).value); if (!(e1 > s1)) throw new Error(`Revisa el horario del ${DOWS[d]}.`); sch[d] = [[s1, e1]];
+            const s2v = $(`.s2[data-d="${d}"]`, m).value, e2v = $(`.e2[data-d="${d}"]`, m).value; if (s2v && e2v) { const s2 = pHM(s2v), e2 = pHM(e2v); if (!(e2 > s2) || s2 < e1) throw new Error(`El segundo turno del ${DOWS[d]} debe empezar después del primero.`); sch[d].push([s2, e2]); } }
+          await put('staff', Object.assign({}, p, { id: p.id || uid('p'), name, services: $$('.ps', m).filter((x) => x.checked).map((x) => x.value), schedule: sch, active: $('#p-a', m).checked, demo: false })); closeModal(); toast('Profesional guardada'); }).catch((er) => ($('#p-e', m).textContent = er.message)); });
+  }
+  function addOff(staffId) {
+    modal('Registrar ausencia', `<div class="fgrid"><label class="f" for="o-d"><span>Fecha</span><input type="date" id="o-d" value="${nowL().date}" min="${nowL().date}"></label><label class="f" for="o-s"><span>Desde</span><input type="time" id="o-s" value="09:00"></label><label class="f" for="o-e"><span>Hasta</span><input type="time" id="o-e" value="20:00"></label><label class="f" for="o-r"><span>Motivo</span><input type="text" id="o-r" placeholder="Vacaciones, cita médica…"></label></div>`,
+      `<span class="err grow" id="o-x"></span><button class="btn primary" id="o-ok">Guardar</button>`,
+      (m) => { $('#o-ok', m).onclick = (e) => guard(e.currentTarget, async () => { const date = $('#o-d', m).value, s = pHM($('#o-s', m).value), en = pHM($('#o-e', m).value); if (!date || !(en > s)) throw new Error('Revisa la fecha y las horas.');
+          const clash = vals(S.bookings).filter((b) => b.staffId === staffId && b.date === date && b.status === 'confirmada' && b.start < en && s < b.end); if (clash.length) throw new Error('Hay ' + clash.length + ' cita(s) en ese horario: reprográmalas primero.');
+          await put('timeoff', { id: uid('o'), staffId, date, start: s, end: en, reason: $('#o-r', m).value.trim() || 'Ausencia' }); closeModal(); toast('Ausencia registrada'); }).catch((er) => ($('#o-x', m).textContent = er.message)); });
+  }
+
+  // ───── panel: ajustes ─────
+  function viewSettings() {
+    const c = cfg();
+    return { html: `<h1>Ajustes</h1><div class="card"><div class="fgrid"><label class="f" for="c-n"><span>Nombre del salón</span><input type="text" id="c-n" value="${esc(c.name)}"></label><label class="f" for="c-a"><span>Dirección</span><input type="text" id="c-a" value="${esc(c.address)}"></label><label class="f" for="c-p"><span>WhatsApp del salón</span><input type="tel" id="c-p" value="${esc(c.phone)}" inputmode="numeric"></label>
+      <label class="f" for="c-st"><span>Intervalo de horarios (min)</span><select id="c-st">${[10, 15, 20, 30, 60].map((x) => opt(x, x + ' min', c.slotStep)).join('')}</select></label><label class="f" for="c-mn"><span>Aviso mínimo para reservar</span><select id="c-mn">${[[0, 'Sin mínimo'], [60, '1 hora'], [120, '2 horas'], [240, '4 horas'], [1440, '1 día']].map(([v, l]) => opt(v, l, c.minNotice)).join('')}</select></label><label class="f" for="c-md"><span>Reservas hasta (días adelante)</span><input type="number" id="c-md" min="1" max="180" value="${c.maxDays}"></label>
+      <label class="f" for="c-dp"><span>Adelanto sugerido (%)</span><input type="number" id="c-dp" min="0" max="100" value="${c.depositPct}"></label><label class="f" for="c-pm"><span>Métodos de pago</span><input type="text" id="c-pm" value="${esc(c.payMethods)}"></label></div>
+      <label class="f" for="c-po" style="margin-top:10px"><span>Política de cambios y cancelación</span><textarea id="c-po">${esc(c.policy)}</textarea></label><div class="row" style="margin-top:10px"><span class="err grow" id="c-e"></span><button class="btn primary" id="c-ok">Guardar ajustes</button></div></div>
+      <div class="card small"><b>Dónde se guardan los datos:</b> ${backend === 'supabase' ? 'en tu base de datos de Supabase. Solo las cuentas del salón ven nombres y celulares; la página pública solo sabe qué horarios están ocupados.' : 'solo en este navegador (modo de prueba, falta config.js).'}</div>`,
+      after: () => { const b = $('#c-ok'); b.onclick = () => guard(b, async () => { const name = $('#c-n').value.trim(); if (!name) throw new Error('Escribe el nombre del salón.');
+        await put('config', Object.assign({}, cfg(), { name, address: $('#c-a').value.trim(), phone: normPhone($('#c-p').value), slotStep: Number($('#c-st').value), minNotice: Number($('#c-mn').value), maxDays: Math.max(1, Number($('#c-md').value) || 30), depositPct: Math.min(100, Math.max(0, Number($('#c-dp').value) || 0)), payMethods: $('#c-pm').value.trim(), policy: $('#c-po').value.trim() })); toast('Ajustes guardados'); }).catch((e) => ($('#c-e').textContent = e.message)); } };
+  }
+
+  // ───── datos de ejemplo (botón, marcados DEMO) ─────
+  async function seed() {
+    const svcs = [
+      ['Manicure clásica', 'Manos', 45, 30, '#f6c9d9', 'Limado, cutícula y esmaltado tradicional.'], ['Manicure semipermanente', 'Manos', 60, 50, '#dccff3', 'Esmalte en gel que dura hasta 3 semanas.'],
+      ['Uñas acrílicas (set completo)', 'Uñas esculpidas', 120, 110, '#fde0cf', 'Extensión con acrílico, forma y largo a elección.'], ['Relleno acrílico', 'Uñas esculpidas', 90, 75, '#f3d2e4', 'Mantenimiento del set (cada 2–3 semanas).'],
+      ['Pedicure spa', 'Pies', 60, 45, '#c9ead9', 'Exfoliación, hidratación y esmaltado.'], ['Retiro de gel o acrílico', 'Retiro', 30, 20, '#f9ecc0', 'Retiro sin dañar la uña natural.'],
+    ];
+    const ids = [];
+    for (let i = 0; i < svcs.length; i++) { const [name, category, duration, price, color, description] = svcs[i]; const id = 's_demo' + i; ids.push(id); await put('services', { id, name, category, duration, price, color, description, bufferBefore: 0, bufferAfter: 10, active: true, order: i, demo: true }); }
+    const week = (a, b) => ({ 1: [[a, b]], 2: [[a, b]], 3: [[a, b]], 4: [[a, b]], 5: [[a, b]], 6: [[540, 900]] });
+    await put('staff', { id: 'p_demo1', name: 'Andrea', services: ids, schedule: week(540, 1140), active: true, demo: true });
+    await put('staff', { id: 'p_demo2', name: 'Lucía', services: ids.filter((x, i) => i !== 2), schedule: { 2: [[600, 780], [840, 1200]], 3: [[600, 780], [840, 1200]], 4: [[600, 780], [840, 1200]], 5: [[600, 780], [840, 1200]], 6: [[540, 1020]] }, active: true, demo: true });
+    toast('Ejemplo cargado: 6 servicios y 2 profesionales (DEMO)');
+  }
+
+  init().then(() => { const h = location.hash.slice(1); go(h || (canEdit ? 'citas' : 'reservar')); });
+  window.__agenda = { S, slotsFor, slotsAny, createBooking, moveBooking, put, nowL, seed, get backend() { return backend; } };
+})();
+</script>
+</body>
+</html>
