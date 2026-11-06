@@ -112,6 +112,13 @@ begin
   return jsonb_build_object('id', b.id, 'code', b.code, 'serviceName', b.service_name, 'staffName', b.staff_name, 'date', b.date, 'start', b.start_min, 'end', b.end_min, 'price', b.price, 'staffId', b.staff_id);
 end $$;
 
+-- Plazo para que la clienta cambie o cancele sola: el día anterior hasta settings.cutoffPrevDayMin (minutos) o, si no hay, 3 horas antes.
+create or replace function change_deadline_passed(p_date date, p_start int) returns boolean language sql stable security definer set search_path = public as $$
+  select case when (select data->>'cutoffPrevDayMin' from settings where id = 'main') is not null
+    then lima_now() > ((p_date - 1) + make_interval(mins => (select (data->>'cutoffPrevDayMin')::int from settings where id = 'main')))
+    else (p_date + make_interval(mins => p_start)) - lima_now() < interval '3 hours' end
+$$;
+
 -- La clienta consulta su cita con código + celular (no puede ver otras).
 create or replace function my_booking(p_code text, p_phone text) returns jsonb language sql stable security definer set search_path = public as $$
   select jsonb_build_object('id', id, 'code', code, 'serviceId', service_id, 'serviceName', service_name, 'staffId', staff_id, 'staffName', staff_name, 'date', date, 'start', start_min, 'end', end_min, 'price', price, 'status', status, 'blockStart', block_start, 'blockEnd', block_end)
@@ -124,7 +131,7 @@ begin
   select * into b from bookings where code = upper(trim(p_code)) and client_phone = right(regexp_replace(coalesce(p_phone,''), '\D', '', 'g'), 9) for update;
   if not found then raise exception 'No encontramos esa cita.'; end if;
   if b.status <> 'confirmada' then raise exception 'Esta cita ya no se puede cancelar.'; end if;
-  if (b.date + make_interval(mins => b.start_min)) - lima_now() < interval '3 hours' then raise exception 'Faltan menos de 3 horas: comunícate con el salón.'; end if;
+  if change_deadline_passed(b.date, b.start_min) then raise exception 'Ya pasó el plazo para cambios sin penalidad. Escríbenos por WhatsApp para cancelar o reprogramar.'; end if;
   update bookings set status = 'cancelada', cancel_reason = 'Cancelada por la clienta', history = history || jsonb_build_object('at', now(), 'what', 'Cancelada', 'by', 'Clienta') where id = b.id;
 end $$;
 
@@ -135,7 +142,7 @@ begin
   select * into b from bookings where code = upper(trim(p_code)) and client_phone = right(regexp_replace(coalesce(p_phone,''), '\D', '', 'g'), 9) for update;
   if not found then raise exception 'No encontramos esa cita.'; end if;
   if b.status <> 'confirmada' then raise exception 'Esta cita ya no se puede cambiar.'; end if;
-  if not is_admin() and (b.date + make_interval(mins => b.start_min)) - lima_now() < interval '3 hours' then raise exception 'Faltan menos de 3 horas: comunícate con el salón.'; end if;
+  if not is_admin() and change_deadline_passed(b.date, b.start_min) then raise exception 'Ya pasó el plazo para cambios sin penalidad. Escríbenos por WhatsApp para cancelar o reprogramar.'; end if;
   select * into sv from services where id = b.service_id; if not found then raise exception 'El servicio ya no existe.'; end if;
   select coalesce(data, '{}') into cfg from settings where id = 'main';
   if (p_date + make_interval(mins => p_start)) < lima_now() + make_interval(mins => coalesce((cfg->>'minNotice')::int, 120)) and not is_admin() then raise exception 'Ese horario ya no está disponible.'; end if;

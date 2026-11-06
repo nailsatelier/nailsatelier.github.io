@@ -143,6 +143,14 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 .na-foot{max-width:520px;margin:6px auto 0;padding:18px 4px 6px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:6px;font-size:.86rem;color:var(--muted);text-align:center}
 .na-foot b{font-family:var(--f-display);font-size:1.05rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink);font-weight:600}
 .na-foot a{color:var(--ink);font-weight:600}
+.na-sec{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:8px}
+.na-sec h2{font-family:var(--f-display);font-size:1.45rem;font-weight:600;letter-spacing:.02em}
+.na-sec ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}.na-sec p{margin:0}
+.na-sec .na-k{font-size:.68rem;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.na-menu{display:flex;flex-direction:column}.na-menu div{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)}.na-menu div:last-child{border-bottom:0}
+.na-menu b{font-weight:700}.na-menu small{display:block;color:var(--muted);font-size:.82rem;margin-top:2px}.na-menu span:last-child{white-space:nowrap;font-weight:700}
+.na-about{background:#161616;color:#f4f3f1;border-color:#161616}.na-about h2{color:#fff}.na-about .na-k{color:#bdbab5}
+.w-link{background:none;border:0;padding:0;color:var(--ink);font-weight:700;text-decoration:underline;cursor:pointer;font-size:inherit}
 .na-social{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:6px 0 2px}
 .na-social a{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--ink);background:var(--surface);color:var(--ink);text-decoration:none;font-weight:700;font-size:.9rem}
 .na-social a:hover{background:var(--ink);color:var(--bg)}.na-social svg{width:18px;height:18px;flex:none}
@@ -231,8 +239,19 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
   // ───────── datos ─────────
   const COLLS = ['config', 'services', 'staff', 'timeoff', 'bookings'];
   const S = {}; COLLS.forEach((c) => (S[c] = {}));
-  const DEF = { id: 'main', name: 'Nails Atelier', tagline: 'Un espacio donde la calidad, la técnica y la experiencia no se negocian.', hours: 'Lunes a sábado', address: 'Av. San Borja Sur 247, San Borja, Lima', phone: '915049042', tiktok: 'nailsatelier_pe', instagram: 'nailsatelier_pe', slotStep: 15, minNotice: 120, maxDays: 30, depositPct: 0, payMethods: 'Efectivo, Yape, Plin', policy: 'Puedes cancelar o reprogramar sin costo hasta 3 horas antes de tu cita.' };
+  const DEF = { id: 'main', name: 'Nails Atelier', tagline: 'Un espacio donde la calidad, la técnica y la experiencia no se negocian.', hours: 'Lunes a sábado', address: 'Av. San Borja Sur 247, San Borja, Lima', phone: '915049042', tiktok: 'nailsatelier_pe', instagram: 'nailsatelier_pe', slotStep: 15, minNotice: 120, maxDays: 30, depositPct: 0, payMethods: 'Yape · Visa por pago link (+5%)', policy: 'Puedes reprogramar sin penalidad hasta un día antes de tu cita, como máximo a las 8:00 p. m. Después de ese plazo, la cancelación o reprogramación tiene una penalidad de S/ 20 que se descuenta del adelanto.',
+    cutoffPrevDayMin: 1200,
+    about: 'Somos NAILS ATELIER, un estudio de belleza para uñas que combina técnica y estética, con el propósito de elevar el estándar de servicio: desde la atención hasta la calidad de productos.',
+    landmark: 'Al costado de La Romana Pizzería',
+    parking: ['El edificio cuenta con 3 estacionamientos afuera de Tambo, sujetos a disponibilidad.', 'En el parque frente al edificio hay parqueos públicos sin costo, también sujetos a disponibilidad.', 'Si prefieres una playa de estacionamiento, hay una a la espalda del edificio, en la calle López de Ayala.'],
+    payInfo: ['Aceptamos pagos con Yape.', 'Pagos con tarjeta Visa a través de pago link: te lo enviamos por WhatsApp y puedes pagar mientras te realizan el servicio (+5% de recargo).'],
+    policies: ['Las reservas pueden reprogramarse sin penalidad hasta un día antes de la cita, como máximo a las 8:00 p. m.', 'Las cancelaciones o reprogramaciones después de ese plazo, incluido el mismo día de la cita, tienen una penalidad de S/ 20 que se descuenta del adelanto (aun si la reserva se hizo el mismo día).', 'Contamos con una tolerancia máxima de 10 minutos. Recomendamos llegar puntual, incluso si avisaste de la tardanza, porque puede afectar la siguiente atención.', 'Pasados los 10 minutos, el servicio podrá ajustarse según el tiempo disponible: puede ser un servicio más sencillo o sin algunos detalles del diseño.', 'Si la tardanza supera los 25 minutos, será necesario reprogramar la cita. En ese caso el adelanto no es reembolsable y se aplica la penalidad correspondiente.', 'No realizamos servicios sobre uñas con signos de posibles hongos o infecciones bacterianas. En esos casos recomendamos acudir a un profesional de salud antes de programar una nueva cita.'],
+    extras: ['Tip por uña rota | S/ 5 c/u', 'Efectos y diseños | desde S/ 10', 'Retiro de sistema acrílico, softgel u otro por filtración | S/ 20'] };
   const cfg = () => Object.assign({}, DEF, S.config.main || {});
+  const arr = (x) => (Array.isArray(x) ? x : String(x || '').split('\n')).map((t) => String(t).trim()).filter(Boolean);
+  // Hasta cuándo la clienta puede cambiar o cancelar sola: el día anterior a la hora fijada (p. ej. 20:00) o, si no hay, 3 horas antes.
+  const changeDeadline = (b) => { const c = cfg(); return c.cutoffPrevDayMin != null && c.cutoffPrevDayMin !== '' ? epoch(addDays(b.date, -1), Number(c.cutoffPrevDayMin)) : epoch(b.date, b.start) - 3 * 3600000; };
+  const deadlineText = () => { const c = cfg(); if (c.cutoffPrevDayMin == null || c.cutoffPrevDayMin === '') return '3 horas antes de la cita'; const m = Number(c.cutoffPrevDayMin); const h = Math.floor(m / 60); return 'un día antes, hasta las ' + ((h % 12) || 12) + ':' + pad(m % 60) + (h < 12 ? ' a. m.' : ' p. m.'); };
   let backend = 'local'; let canEdit = false; let listeners = []; let sb = null; let session = null;
   const CONF = window.NAILS_CONFIG || {};
   const LS = 'nails-atelier.prueba.v1';
@@ -394,7 +413,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
   const statusPill = (s) => ({ confirmada: '<span class="pill lac">Confirmada</span>', completada: '<span class="pill ok">Atendida</span>', cancelada: '<span class="pill bad">Cancelada</span>', ausente: '<span class="pill warn">No asistió</span>' }[s] || esc(s));
   const demo = (x) => (x && x.demo ? ' <span class="tag-demo">DEMO</span>' : '');
   const ADMIN = [['citas', 'Citas'], ['agenda', 'Agenda'], ['servicios', 'Servicios'], ['equipo', 'Equipo y horarios'], ['ajustes', 'Ajustes']];
-  const PUB = ['reservar', 'mi-cita', 'ingresar'];
+  const PUB = ['reservar', 'mi-cita', 'info', 'ingresar'];
   const routes = PUB.concat(ADMIN.map((x) => x[0]));
   function go(v) { if (!routes.includes(v)) v = canEdit ? 'citas' : 'reservar';
     if (canEdit && v === 'ingresar') v = UI.want || 'citas';
@@ -407,7 +426,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
   function header() {
     const c = cfg(); const pub = PUB.includes(UI.view);
     if (pub) return `<header class="ptop"><div class="pin"><span class="pname">${brand('lg1')}</span>
-      ${UI.view === 'reservar' ? '<button class="plink" data-go="mi-cita">Mi cita</button>' : '<button class="plink" data-go="reservar">Reservar</button>'}${canEdit ? '<button class="plink" data-go="citas" title="Solo lo ves tú">Panel</button>' : ''}</div></header>`;
+      ${UI.view !== 'info' ? '<button class="plink" data-go="info">Info</button>' : ''}${UI.view === 'reservar' ? '<button class="plink" data-go="mi-cita">Mi cita</button>' : '<button class="plink" data-go="reservar">Reservar</button>'}${canEdit ? '<button class="plink" data-go="citas" title="Solo lo ves tú">Panel</button>' : ''}</div></header>`;
     return `<header class="top"><div class="in"><div class="logo">${brand('lg2')}</div>
       <nav class="tabs">${ADMIN.map(([k, l]) => `<button class="tab" data-go="${k}"${UI.view === k ? ' aria-current="page"' : ''}>${l}</button>`).join('')}<button class="tab" data-go="reservar">Ver página de reservas ↗</button>${backend === 'supabase' ? '<button class="tab" id="logout">Salir</button>' : ''}</nav></div></header>`;
   }
@@ -420,12 +439,12 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
   }
   function footer() {
     const c = cfg(); const map = c.address ? 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(c.address) : '';
-    return `<footer class="na-foot"><b>${esc(c.name)}</b>${c.address ? `<span><a href="${esc(map)}" target="_blank" rel="noopener">${esc(c.address)}</a></span>` : ''}${c.hours ? `<span>${esc(c.hours)}</span>` : ''}
+    return `<footer class="na-foot"><b>${esc(c.name)}</b>${c.address ? `<span><a href="${esc(map)}" target="_blank" rel="noopener">${esc(c.address)}</a>${c.landmark ? `<br>${esc(c.landmark)}` : ''}</span>` : ''}${c.hours ? `<span>${esc(c.hours)}</span>` : ''}
       <span>${c.phone ? `<a href="https://wa.me/51${esc(normPhone(c.phone))}" target="_blank" rel="noopener">WhatsApp ${esc(normPhone(c.phone).replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3'))}</a>` : ''}</span>${social(c)}</footer>`;
   }
   function render() {
     const a = $('#app'); const v = UI.view;
-    const body = { reservar: viewBook, 'mi-cita': viewMine, ingresar: viewLogin, citas: viewCitas, agenda: viewAgenda, servicios: viewServices, equipo: viewStaff, ajustes: viewSettings }[v]();
+    const body = { reservar: viewBook, 'mi-cita': viewMine, info: viewInfo, ingresar: viewLogin, citas: viewCitas, agenda: viewAgenda, servicios: viewServices, equipo: viewStaff, ajustes: viewSettings }[v]();
     const note = UI.loadError ? `<div class="banner warn">No se pudo cargar la agenda (${esc(UI.loadError)}). Revisa tu conexión y recarga la página.</div>`
       : backend === 'local' && !PUB.includes(v) ? '<div class="banner warn"><b>Modo de prueba:</b> falta conectar Supabase en <code>config.js</code>. Todo se guarda solo en este navegador y las clientas no ven estos datos.</div>' : '';
     const demoNote = canEdit && !PUB.includes(v) && [S.services, S.staff, S.bookings].some((m) => vals(m).some((x) => x.demo)) ? '<div class="banner warn"><span class="tag-demo">DEMO</span> Hay datos de ejemplo (marcados DEMO). <button class="btn sm" id="clear-demo">Borrar ejemplo</button></div>' : '';
@@ -465,7 +484,8 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
       const cat = cats.includes(B.cat) ? B.cat : '';
       html = `<div class="na-hero"><span class="na-tag">Reserva en línea</span><h1>Uñas <i>perfectas</i>, sin esperar</h1><p>${esc(c.tagline || 'Elige tu servicio y la hora que prefieras.')}</p><div class="na-info">${c.hours ? `<span>${esc(c.hours)}</span>` : ''}${c.address ? `<span>${esc(c.address)}</span>` : ''}</div></div>` + stepHead(1, '¿Qué te quieres hacer?', '') +
         (cats.length > 1 ? `<div class="w-chips" role="group" aria-label="Categorías"><button class="w-chip" data-cat="" aria-pressed="${!cat}">Todos</button>${cats.map((k) => `<button class="w-chip" data-cat="${esc(k)}" aria-pressed="${cat === k}">${esc(k)}</button>`).join('')}</div>` : '') +
-        `<div class="w-list">${svcs.filter((s) => !cat || (s.category || 'Servicios') === cat).map((s) => `<button class="w-opt" data-svc="${s.id}"><span class="w-sw" style="background:${esc(s.color || 'var(--lacquer)')}"></span><span class="w-txt"><b>${esc(s.name)}</b>${demo(s)}${s.description ? `<small>${esc(s.description)}</small>` : ''}<small class="w-meta">${s.duration} min</small></span><span class="w-price">${money(s.price)}</span></button>`).join('')}</div>`;
+        `<div class="w-list">${svcs.filter((s) => !cat || (s.category || 'Servicios') === cat).map((s) => `<button class="w-opt" data-svc="${s.id}"><span class="w-sw" style="background:${esc(s.color || 'var(--lacquer)')}"></span><span class="w-txt"><b>${esc(s.name)}</b>${demo(s)}${s.description ? `<small>${esc(s.description)}</small>` : ''}<small class="w-meta">${s.duration} min</small></span><span class="w-price">${money(s.price)}</span></button>`).join('')}</div>` + extrasBox(c) +
+        `<p class="w-pol" style="text-align:center">Estacionamiento, pagos y políticas: <button class="w-link" data-go="info">ver información</button></p>`;
       after = (a) => {
         $$('[data-cat]', a).forEach((b) => (b.onclick = () => { B.cat = b.dataset.cat; render(); }));
         $$('[data-svc]', a).forEach((b) => (b.onclick = () => { B.svc = b.dataset.svc; B.staff = 'any'; B.date = ''; B.start = null; B.step = 2; render(); window.scrollTo(0, 0); }));
@@ -505,7 +525,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
           <details class="w-more"${F.note || F.email ? ' open' : ''}><summary>Agregar nota o correo (opcional)</summary>
             <label class="w-f" for="cl-x"><span>Nota (diseño, largo, alergias)</span><textarea id="cl-x" rows="2">${esc(F.note || '')}</textarea></label>
             <label class="w-f" for="cl-e"><span>Correo</span><input type="email" id="cl-e" autocomplete="email" value="${esc(F.email || '')}"></label></details>
-          <p class="w-pol">${esc(c.policy)}${Number(c.depositPct) > 0 ? ` Adelanto: ${money(svc.price * c.depositPct / 100)} (${esc(c.payMethods)}).` : ''}</p>
+          <p class="w-pol">${esc(c.policy)}${Number(c.depositPct) > 0 ? ` Adelanto: ${money(svc.price * c.depositPct / 100)} (${esc(c.payMethods)}).` : ''} Tolerancia máxima: 10 minutos. Pago: ${esc(c.payMethods)}. Al confirmar aceptas <button type="button" class="w-link" data-go="info">nuestras políticas</button>.</p>
           <p class="err" id="bk-err" role="alert"></p></form>`;
       bar = '<button class="w-cta" id="w-ok">Confirmar cita</button>';
       after = () => {
@@ -532,10 +552,27 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
       ${Number(c.depositPct) > 0 ? `<p class="w-pol">Para asegurar tu cita paga un adelanto de <b>${money(b.price * c.depositPct / 100)}</b> (${esc(c.payMethods)}).</p>` : ''}
       <div class="w-acts">${wa ? `<a class="w-btn" href="${esc(wa)}" target="_blank" rel="noopener">💬 Avisar al salón por WhatsApp</a>` : ''}<a class="w-btn" href="${esc(gcal)}" target="_blank" rel="noopener">📅 Guardar en mi calendario</a><button class="w-btn" id="new-bk">Reservar otra cita</button></div>
       <div class="na-foot" style="border-top:0;padding-top:0">${social(c)}</div>
+      <div class="na-sec" style="text-align:left"><span class="na-k">Antes de tu cita</span><ul><li>Llega puntual: la tolerancia máxima es de 10 minutos.</li><li>Cambios sin penalidad hasta ${esc(deadlineText())}.</li>${c.landmark ? `<li>Estamos en ${esc(c.address)} (${esc(c.landmark)}).</li>` : ''}${arr(c.payInfo).slice(0, 1).map((t) => `<li>${esc(t)}</li>`).join('')}</ul><button class="w-link" data-go="info" style="align-self:flex-start">Ver estacionamiento y políticas</button></div>
       <p class="w-pol">El salón no envía mensajes automáticos; el aviso por WhatsApp lo mandas tú.</p></div></div>`,
       after: () => { $('#new-bk').onclick = () => { UI.done = null; UI.bk = { svc: '', staff: 'any', date: '', start: null, step: 1 }; render(); window.scrollTo(0, 0); }; } };
   }
   function gDates(b) { const f = (m) => new Date(epoch(b.date, m)).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, ''); return f(b.start) + '/' + f(b.end); }
+
+  function extrasBox(c) {
+    const ex = arr(c.extras); if (!ex.length) return '';
+    return `<div class="na-sec"><span class="na-k">Adicionales</span><div class="na-menu">${ex.map((l) => { const [n, p] = l.split('|').map((x) => x.trim()); return `<div><span>${esc(n)}</span><span>${esc(p || '')}</span></div>`; }).join('')}</div><p class="w-pol">Si necesitas alguno, indícalo en la nota al reservar.</p></div>`;
+  }
+  function viewInfo() {
+    const c = cfg(); const map = c.address ? 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(c.address) : '';
+    const cats = []; services().forEach((s) => { const k = s.category || 'Servicios'; if (!cats.includes(k)) cats.push(k); });
+    const list = (t, items) => (items.length ? `<section class="na-sec"><h2>${t}</h2><ul>${items.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></section>` : '');
+    return { html: `<div class="mwrap" style="padding-bottom:20px">
+      ${c.about ? `<section class="na-sec na-about"><span class="na-k">Quiénes somos</span><p>${esc(c.about)}</p></section>` : ''}
+      <section class="na-sec"><span class="na-k">Ubicación</span><h2>${esc(c.address)}</h2>${c.landmark ? `<p>${esc(c.landmark)}</p>` : ''}${c.hours ? `<p class="muted">${esc(c.hours)}</p>` : ''}${map ? `<a class="w-btn" href="${esc(map)}" target="_blank" rel="noopener">Cómo llegar (Google Maps)</a>` : ''}</section>
+      ${list('Estacionamiento', arr(c.parking))}${list('Pago', arr(c.payInfo))}
+      ${cats.length ? `<section class="na-sec"><h2>Carta</h2>${cats.map((k) => `<span class="na-k" style="margin-top:6px">${esc(k)}</span><div class="na-menu">${services().filter((s) => (s.category || 'Servicios') === k).map((s) => `<div><span><b>${esc(s.name)}</b>${s.description ? `<small>${esc(s.description)}</small>` : ''}</span><span>${money(s.price)}</span></div>`).join('')}</div>`).join('')}<button class="w-cta" data-go="reservar" style="margin-top:8px">Reservar cita</button></section>` : ''}
+      ${extrasBox(c)}${list('Nuestras políticas', arr(c.policies))}</div>` };
+  }
 
   // ───── ingreso del salón (Supabase Auth; solo cuentas de la tabla admins) ─────
   function viewLogin() {
@@ -556,9 +593,9 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
     if (M.msg) out = `<div class="banner ok">${esc(M.msg)}</div>`;
     else if (M.code && !b) out = '<p class="err">No encontramos una cita con ese código y celular.</p>';
     if (b) {
-      const canChange = b.status === 'confirmada' && epoch(b.date, b.start) - Date.now() > 3 * 3600000;
+      const canChange = b.status === 'confirmada' && Date.now() < changeDeadline(b);
       out += `<div class="list"${M.msg ? ' style="margin-top:10px"' : ''}><div class="li"><span>${esc(b.serviceName)} · ${esc(b.staffName)}</span>${statusPill(b.status)}</div><div class="li"><span>${esc(fmtD(b.date))}</span><b>${hm(b.start)} – ${hm(b.end)}</b></div></div>
-        ${canChange ? '<div class="row" style="margin-top:10px"><button class="btn" id="m-r">Reprogramar</button><button class="btn danger" id="m-x">Cancelar cita</button></div>' : b.status === 'confirmada' ? '<p class="small muted">Faltan menos de 3 horas: para cambios comunícate con el salón.</p>' : ''}`;
+        ${canChange ? '<div class="row" style="margin-top:10px"><button class="btn" id="m-r">Reprogramar</button><button class="btn danger" id="m-x">Cancelar cita</button></div>' : b.status === 'confirmada' ? `<p class="small muted">El plazo para cambios sin penalidad (${esc(deadlineText())}) ya pasó. Para cancelar o reprogramar escríbenos${cfg().phone ? ` por <a href="https://wa.me/51${esc(normPhone(cfg().phone))}" target="_blank" rel="noopener">WhatsApp</a>` : ''}: aplica la penalidad según nuestras políticas.</p>` : ''}`;
     }
     return { html: `<div class="card" style="max-width:520px;width:100%;margin:0 auto"><h2>Mi cita</h2><p class="small muted">Escribe el código que recibiste al reservar y tu celular.</p><form id="mine" class="fgrid" novalidate><label class="f" for="m-c"><span>Código</span><input type="text" id="m-c" placeholder="C-XXXXXX" autocapitalize="characters" value="${esc(M.code || '')}"></label><label class="f" for="m-p"><span>Celular</span><input type="tel" id="m-p" inputmode="numeric" value="${esc(M.phone || '')}"></label><button class="btn primary" type="submit" style="align-self:end">Buscar</button></form><div id="m-out" style="margin-top:12px">${out}</div></div>`,
       after: () => {
@@ -698,25 +735,33 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
     return { html: `<h1>Ajustes</h1><div class="card"><div class="fgrid"><label class="f" for="c-n"><span>Nombre del salón</span><input type="text" id="c-n" value="${esc(c.name)}"></label><label class="f" for="c-a"><span>Dirección</span><input type="text" id="c-a" value="${esc(c.address)}"></label><label class="f" for="c-h"><span>Horario</span><input type="text" id="c-h" value="${esc(c.hours || '')}" placeholder="Lunes a sábado, 10:00 a 20:00"></label><label class="f" for="c-ig"><span>Instagram (sin @)</span><input type="text" id="c-ig" value="${esc(c.instagram || '')}"></label><label class="f" for="c-tk"><span>TikTok (sin @)</span><input type="text" id="c-tk" value="${esc(c.tiktok || '')}"></label><label class="f" for="c-p"><span>WhatsApp del salón</span><input type="tel" id="c-p" value="${esc(c.phone)}" inputmode="numeric"></label>
       <label class="f" for="c-st"><span>Intervalo de horarios (min)</span><select id="c-st">${[10, 15, 20, 30, 60].map((x) => opt(x, x + ' min', c.slotStep)).join('')}</select></label><label class="f" for="c-mn"><span>Aviso mínimo para reservar</span><select id="c-mn">${[[0, 'Sin mínimo'], [60, '1 hora'], [120, '2 horas'], [240, '4 horas'], [1440, '1 día']].map(([v, l]) => opt(v, l, c.minNotice)).join('')}</select></label><label class="f" for="c-md"><span>Reservas hasta (días adelante)</span><input type="number" id="c-md" min="1" max="180" value="${c.maxDays}"></label>
       <label class="f" for="c-dp"><span>Adelanto sugerido (%)</span><input type="number" id="c-dp" min="0" max="100" value="${c.depositPct}"></label><label class="f" for="c-pm"><span>Métodos de pago</span><input type="text" id="c-pm" value="${esc(c.payMethods)}"></label></div>
-      <label class="f" for="c-tg" style="margin-top:10px"><span>Frase de portada</span><input type="text" id="c-tg" value="${esc(c.tagline || '')}"></label><label class="f" for="c-po" style="margin-top:10px"><span>Política de cambios y cancelación</span><textarea id="c-po">${esc(c.policy)}</textarea></label><div class="row" style="margin-top:10px"><span class="err grow" id="c-e"></span><button class="btn primary" id="c-ok">Guardar ajustes</button></div></div>
+      <label class="f" for="c-tg" style="margin-top:10px"><span>Frase de portada</span><input type="text" id="c-tg" value="${esc(c.tagline || '')}"></label><label class="f" for="c-po" style="margin-top:10px"><span>Política de cambios (resumen al reservar)</span><textarea id="c-po">${esc(c.policy)}</textarea></label>
+      <label class="f" for="c-cut" style="margin-top:10px"><span>La clienta puede cambiar o cancelar sola hasta</span><select id="c-cut">${[['', '3 horas antes de la cita'], [1080, 'El día anterior, 6:00 p. m.'], [1200, 'El día anterior, 8:00 p. m.'], [1320, 'El día anterior, 10:00 p. m.']].map(([v, l]) => opt(v, l, c.cutoffPrevDayMin == null ? '' : c.cutoffPrevDayMin)).join('')}</select></label>
+      <h3 style="margin-top:16px">Información para clientas (página Info)</h3><p class="small muted">Un punto por línea.</p>
+      <label class="f" for="c-ab"><span>Quiénes somos</span><textarea id="c-ab" rows="3">${esc(c.about || '')}</textarea></label>
+      <label class="f" for="c-lm"><span>Referencia de ubicación</span><input type="text" id="c-lm" value="${esc(c.landmark || '')}"></label>
+      <label class="f" for="c-pk"><span>Estacionamiento</span><textarea id="c-pk" rows="3">${esc(arr(c.parking).join('\n'))}</textarea></label>
+      <label class="f" for="c-pi"><span>Pago</span><textarea id="c-pi" rows="2">${esc(arr(c.payInfo).join('\n'))}</textarea></label>
+      <label class="f" for="c-pl"><span>Nuestras políticas</span><textarea id="c-pl" rows="6">${esc(arr(c.policies).join('\n'))}</textarea></label>
+      <label class="f" for="c-ex"><span>Adicionales (nombre | precio)</span><textarea id="c-ex" rows="3">${esc(arr(c.extras).join('\n'))}</textarea></label><div class="row" style="margin-top:10px"><span class="err grow" id="c-e"></span><button class="btn primary" id="c-ok">Guardar ajustes</button></div></div>
       <div class="card small"><b>Dónde se guardan los datos:</b> ${backend === 'supabase' ? 'en tu base de datos de Supabase. Solo las cuentas del salón ven nombres y celulares; la página pública solo sabe qué horarios están ocupados.' : 'solo en este navegador (modo de prueba, falta config.js).'}</div>`,
       after: () => { const b = $('#c-ok'); b.onclick = () => guard(b, async () => { const name = $('#c-n').value.trim(); if (!name) throw new Error('Escribe el nombre del salón.');
-        await put('config', Object.assign({}, cfg(), { name, address: $('#c-a').value.trim(), hours: $('#c-h').value.trim(), tiktok: $('#c-tk').value.trim().replace(/^@/, ''), instagram: $('#c-ig').value.trim().replace(/^@/, ''), tagline: $('#c-tg').value.trim(), phone: normPhone($('#c-p').value), slotStep: Number($('#c-st').value), minNotice: Number($('#c-mn').value), maxDays: Math.max(1, Number($('#c-md').value) || 30), depositPct: Math.min(100, Math.max(0, Number($('#c-dp').value) || 0)), payMethods: $('#c-pm').value.trim(), policy: $('#c-po').value.trim() })); toast('Ajustes guardados'); }).catch((e) => ($('#c-e').textContent = e.message)); } };
+        await put('config', Object.assign({}, cfg(), { name, address: $('#c-a').value.trim(), hours: $('#c-h').value.trim(), tiktok: $('#c-tk').value.trim().replace(/^@/, ''), instagram: $('#c-ig').value.trim().replace(/^@/, ''), tagline: $('#c-tg').value.trim(), phone: normPhone($('#c-p').value), slotStep: Number($('#c-st').value), minNotice: Number($('#c-mn').value), maxDays: Math.max(1, Number($('#c-md').value) || 30), depositPct: Math.min(100, Math.max(0, Number($('#c-dp').value) || 0)), payMethods: $('#c-pm').value.trim(), policy: $('#c-po').value.trim(), cutoffPrevDayMin: $('#c-cut').value === '' ? null : Number($('#c-cut').value), about: $('#c-ab').value.trim(), landmark: $('#c-lm').value.trim(), parking: arr($('#c-pk').value), payInfo: arr($('#c-pi').value), policies: arr($('#c-pl').value), extras: arr($('#c-ex').value) })); toast('Ajustes guardados'); }).catch((e) => ($('#c-e').textContent = e.message)); } };
   }
 
   // ───── datos de ejemplo (botón, marcados DEMO) ─────
   async function seed() {
     const svcs = [
-      ['Rubber base', 'Manos', 75, 69.9, '#e4ded6', 'Esmaltado con rubber base. Incluye cat eye (ojo de gato).'], ['Builder gel', 'Manos', 90, 79.9, '#d6d1ca', 'Nivelación y refuerzo con builder gel. Incluye cat eye (ojo de gato).'],
-      ['Manicure clásica', 'Manos', 45, 35, '#ece8e2', 'Limado, cutícula y esmaltado tradicional.'], ['Diseño y nail art', 'Diseño', 30, 15, '#c9c4bc', 'Diseños a mano alzada por uña o set (precio de ejemplo).'],
-      ['Pedicure spa', 'Pies', 60, 50, '#e8e6e2', 'Exfoliación, hidratación y esmaltado.'], ['Retiro de gel o acrílico', 'Retiro', 30, 20, '#f1efec', 'Retiro sin dañar la uña natural.'],
+      ['Base Rubber', 'Sistemas', 90, 85, '#e4ded6', 'Base flexible que ayuda al crecimiento de la uña natural. Limpieza + base rubber + esmaltado + hidratación BYREDO.'], ['Builder Gel', 'Sistemas', 120, 100, '#d6d1ca', 'Gel constructor para mayor firmeza y duración. Limpieza + builder gel + esmaltado + hidratación BYREDO.'],
+      ['Softgel', 'Sistemas', 150, 120, '#cbc6bf', 'Extensiones con tips preformados: uñas largas y acabado natural.'], ['Manicare', 'Manicure', 60, 55, '#ece8e2', 'Limpieza + exfoliación + restaurador clinical + hidratación profunda BYREDO.'],
+      ['Pedicure clásica', 'Pedicure', 60, 55, '#e8e6e2', 'Limpieza básica + esmaltado gel frío + exfoliación + hidratación BYREDO.'], ['Pedicure gel color', 'Pedicure', 75, 65, '#dedad4', 'Limpieza básica + esmaltado color gel + exfoliación + hidratación BYREDO.'],
     ];
     const ids = [];
     for (let i = 0; i < svcs.length; i++) { const [name, category, duration, price, color, description] = svcs[i]; const id = 's_demo' + i; ids.push(id); await put('services', { id, name, category, duration, price, color, description, bufferBefore: 0, bufferAfter: 10, active: true, order: i, demo: true }); }
-    const week = (a, b) => ({ 1: [[a, b]], 2: [[a, b]], 3: [[a, b]], 4: [[a, b]], 5: [[a, b]], 6: [[540, 900]] });
-    await put('staff', { id: 'p_demo1', name: 'Andrea', services: ids, schedule: week(540, 1140), active: true, demo: true });
-    await put('staff', { id: 'p_demo2', name: 'Lucía', services: ids.filter((x, i) => i !== 2), schedule: { 2: [[600, 780], [840, 1200]], 3: [[600, 780], [840, 1200]], 4: [[600, 780], [840, 1200]], 5: [[600, 780], [840, 1200]], 6: [[540, 1020]] }, active: true, demo: true });
-    toast('Ejemplo cargado: 6 servicios y 2 profesionales (DEMO)');
+    const week = { 1: [[600, 1200]], 2: [[600, 1200]], 3: [[600, 1200]], 4: [[600, 1200]], 5: [[600, 1200]], 6: [[600, 1020]] };
+    await put('staff', { id: 'p_demo1', name: 'Alice', services: ids, schedule: week, active: true, demo: true });
+    await put('staff', { id: 'p_demo2', name: 'Pía', services: ids, schedule: week, active: true, demo: true });
+    toast('Ejemplo cargado: 6 servicios, Alice y Pía (DEMO)');
   }
 
   init().then(() => { const h = location.hash.slice(1); go(h || (canEdit ? 'citas' : 'reservar')); });
